@@ -120,8 +120,15 @@ end
 
 puts "Accounts voting: #{@voters.size} ... waiting for posts."
 
-@stream.operations(:comment) do |comment|
-  next unless may_vote? comment
-  
-  vote(comment)
+loop do
+  begin
+    @stream.operations(:comment) do |comment|
+      next unless may_vote? comment
+      
+      vote(comment)
+    end
+  rescue => e
+    puts "Unable to stream on current node.  Retrying in 5 seconds.  Error: #{e}"
+    sleep 5
+  end
 end
