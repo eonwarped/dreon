@@ -36,7 +36,8 @@ end
 
 def may_vote?(comment)
   return false unless comment.depth == 0
-  return false if (@skip_tags & JSON[comment.json_metadata]['tags']).any?
+  return false if @skip_tags.include? comment.parent_permlink
+  return false if (@skip_tags & JSON[comment.json_metadata || '{}']['tags'] rescue []).any?
   return false if @skip_accounts.include? comment.author
   
   true
