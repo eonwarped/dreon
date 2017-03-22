@@ -1,0 +1,32 @@
+GIT
+  remote: git@github.com:inertia186/radiator.git
+  revision: 1a7f2d1ba8a30a8b374a175e808acabb1e55d481
+  specs:
+    radiator (0.0.7a)
+      bitcoin-ruby (= 0.0.10)
+      ffi (= 1.9.17)
+      hashie (>= 1.1)
+      logging (~> 2.1.0)
+      net-http-persistent (= 2.9.4)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    bitcoin-ruby (0.0.10)
+    ffi (1.9.17)
+    hashie (3.5.5)
+    little-plugger (1.1.4)
+    logging (2.1.0)
+      little-plugger (~> 1.1)
+      multi_json (~> 1.10)
+    multi_json (1.12.1)
+    net-http-persistent (2.9.4)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  radiator!
+
+BUNDLED WITH
+   1.14.3

@@ -1,6 +1,8 @@
 # Dr. Phil (drphil) is reimplmentation of the winfrey voting bot.  The goal is
 # to give everyone an upvote.  But instead of voting 1% by 100 accounts like
 # winfrey, this script will vote 100% with 1 randomly chosen account.
+# 
+# See: https://steemit.com/radiator/@inertia/drphil-rb-voting-bot
 
 require 'rubygems'
 require 'bundler/setup'
@@ -39,7 +41,7 @@ WAIT_RANGE = [1..3]
 @stream = Radiator::Stream.new(@options)
 
 def may_vote?(comment)
-  # return false unless comment.depth == 0
+  return false unless comment.depth == 0
   return false if (@skip_tags & JSON[comment.json_metadata]['tags']).any?
   return false if @skip_accounts.include? comment.author
   
@@ -54,7 +56,6 @@ def vote(comment)
   
   Thread.new do
     wait = Random.rand(*WAIT_RANGE) * 60
-    puts "\tWaiting: #{wait} seconds."
     sleep wait
     
     loop do
@@ -71,12 +72,10 @@ def vote(comment)
         end.compact
         
         if comment.author_reputation.to_i < 0
-          puts "\tSkipped because low rep."
           break
         end
         
         if (downvoters & @flag_signals).any?
-          puts "\tSkipped because flagged."
           break
         end
         
