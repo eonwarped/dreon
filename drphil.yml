@@ -1,0 +1,9 @@
+voters:
+  - social 5JrvPrQeBBvCRdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC
+  - bad.account 5XXXBadWifXXXdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC
+skip_accounts: leeroy.jenkins the.masses danlarimer ned-reddit-login
+skip_tags: nsfw test
+flag_signals: cheetah steemcleaners
+chain_options:
+  chain: steem
+  url: https://steemd.steemit.com

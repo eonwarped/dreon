@@ -6,42 +6,36 @@
 
 require 'rubygems'
 require 'bundler/setup'
+require 'yaml'
 
 Bundler.require
 
 # If there are problems, this is the most time we'll wait (in seconds).
 MAX_BACKOFF = 12.8
 VOTE_WEIGHT = "100.00 %"
-WAIT_RANGE = [1..3]
+WAIT_RANGE = [18..30]
 
-@voters = %w(
-  social 5JrvPrQeBBvCRdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC
-  bad.account 5XXXBadWifXXXdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC
-).each_slice(2).to_h
+@config_path = "#{File.dirname(__FILE__)}/drphil.yml"
 
-@skip_accounts = %w(
-  leeroy.jenkins the.masses danlarimer ned-reddit-login
-)
+unless File.exist? @config_path
+  puts "Unable to find: #{@config_path}"
+  exit
+end
 
-@skip_tags = %w(
-  nsfw test
-)
-
-@flag_signals = %w(
-  cheetah steemcleaners
-)
-
-@options = {
-  chain: :steem,
-  url: 'https://steemd.steemit.com',
-  logger: Logger.new(__FILE__.sub(/\.rb$/, '.log'))
-}
+@config = YAML.load_file(@config_path)
+@voters = @config['voters'].map{ |v| v.split(' ')}.flatten.each_slice(2).to_h
+@skip_accounts = @config['skip_accounts'].split(' ')
+@skip_tags = @config['skip_tags'].split(' ')
+@flag_signals = @config['flag_signals'].split(' ')
+@options = @config['chain_options']
+@options[:chain] = @options['chain'].to_sym
+@options[:logger] = Logger.new(__FILE__.sub(/\.rb$/, '.log'))
 
 @api = Radiator::Api.new(@options)
 @stream = Radiator::Stream.new(@options)
 
 def may_vote?(comment)
-  return false unless comment.depth == 0
+  # return false unless comment.depth == 0
   return false if (@skip_tags & JSON[comment.json_metadata]['tags']).any?
   return false if @skip_accounts.include? comment.author
   
@@ -56,6 +50,7 @@ def vote(comment)
   
   Thread.new do
     wait = Random.rand(*WAIT_RANGE) * 60
+    puts "Waiting #{wait} seconds to vote for:\n\t@#{comment.author}/#{comment.permlink}"    
     sleep wait
     
     loop do
@@ -125,6 +120,8 @@ def vote(comment)
     end
   end
 end
+
+puts "Accounts voting: #{@voters.size} ... waiting for posts."
 
 @stream.operations(:comment) do |comment|
   next unless may_vote? comment
