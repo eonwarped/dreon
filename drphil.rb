@@ -35,7 +35,7 @@ end
 @stream = Radiator::Stream.new(@options)
 
 def may_vote?(comment)
-  # return false unless comment.depth == 0
+  return false unless comment.depth == 0
   return false if (@skip_tags & JSON[comment.json_metadata]['tags']).any?
   return false if @skip_accounts.include? comment.author
   
