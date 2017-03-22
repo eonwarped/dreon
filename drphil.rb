@@ -27,9 +27,11 @@ end
 @skip_accounts = @config['skip_accounts'].split(' ')
 @skip_tags = @config['skip_tags'].split(' ')
 @flag_signals = @config['flag_signals'].split(' ')
-@options = @config['chain_options']
-@options[:chain] = @options['chain'].to_sym
-@options[:logger] = Logger.new(__FILE__.sub(/\.rb$/, '.log'))
+@options = {
+  chain: @config['chain_options']['chain'].to_sym,
+  url: @config['chain_options']['url'],
+  logger: Logger.new(__FILE__.sub(/\.rb$/, '.log'))
+}
 
 @api = Radiator::Api.new(@options)
 @stream = Radiator::Stream.new(@options)
@@ -67,18 +69,12 @@ def vote(comment)
           v.voter if v.percent < 0
         end.compact
         
-        if comment.author_reputation.to_i < 0
-          break
-        end
-        
-        if (downvoters & @flag_signals).any?
-          break
-        end
-        
-        if all_voters.include? voter
-          voters -= [voter]
-          next
-        end
+        # Skipping this post because of various reasons like rep too low ...
+        break if comment.author_reputation.to_i < 0
+        # ... Got a signal flag ...
+        break if (downvoters & @flag_signals).any?
+        # ... Already voted (probably because post was edited) ...
+        break if (all_voters & voters).any?
         
         wif = @voters[voter]
         tx = Radiator::Transaction.new(@options.merge(wif: wif))
