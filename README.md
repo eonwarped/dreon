@@ -32,7 +32,7 @@ I've tested it on various versions of ruby.  The oldest one I got it to work was
 First, clone this gist and install the dependencies:
 
 ```bash
-$ git clone git@gist.github.com:61bcc2b821aa5acb24f7fc88921950c7.git drphil
+$ git clone https://gist.github.com/61bcc2b821aa5acb24f7fc88921950c7.git drphil
 $ cd drphil
 $ bundle install
 ```
