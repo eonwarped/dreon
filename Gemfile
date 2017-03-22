@@ -1,3 +1,3 @@
 source 'https://rubygems.org'
-gem 'radiator', git: 'git@github.com:inertia186/radiator.git'
+gem 'radiator', git: 'https://github.com/inertia186/radiator.git'
 

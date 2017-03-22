@@ -1,5 +1,5 @@
 GIT
-  remote: git@github.com:inertia186/radiator.git
+  remote: https://github.com/inertia186/radiator.git
   revision: 1a7f2d1ba8a30a8b374a175e808acabb1e55d481
   specs:
     radiator (0.0.7a)
