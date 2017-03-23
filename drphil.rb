@@ -37,7 +37,7 @@ end
 @stream = Radiator::Stream.new(@options)
 
 def may_vote?(comment)
-  return false unless comment.depth == 0
+  return false unless comment.parent_author.empty?
   return false if @skip_tags.include? comment.parent_permlink
   return false if (@skip_tags & JSON[comment.json_metadata || '{}']['tags'] rescue []).any?
   return false if @skip_accounts.include? comment.author
@@ -45,36 +45,60 @@ def may_vote?(comment)
   true
 end
 
+def skip?(comment, voters)
+  return true if voters.empty?
+  
+  all_voters = comment.active_votes.map(&:voter)
+  downvoters = comment.active_votes.map do |v|
+    v.voter if v.percent < 0
+  end.compact
+  
+  # Skipping this post because of various reasons like
+  if comment.author_reputation.to_i < 0
+    # ... rep too low ...
+    puts "Skipped, due to low rep:\n\t@#{comment.author}/#{comment.permlink}"
+    return true
+  end
+  
+  if (downvoters & @flag_signals).any?
+    # ... Got a signal flag ...
+    puts "Skipped, flag signals:\n\t@#{comment.author}/#{comment.permlink}"
+    return true
+  end
+  
+  if (all_voters & voters).any?
+    # ... Already voted (probably because post was edited) ...
+    puts "Skipped, already voted:\n\t@#{comment.author}/#{comment.permlink}"
+    return true
+  end
+  
+  false
+end
+
 def vote(comment)
   backoff = 0.2
-  voters = @voters.keys
-  response = @api.get_content(comment.author, comment.permlink)
-  comment = response.result
   
   Thread.new do
+    voters = @voters.keys
+    response = @api.get_content(comment.author, comment.permlink)
+    comment = response.result
+    
+    return if skip?(comment, voters)
+    
     wait = Random.rand(*WAIT_RANGE) * 60
-    puts "Waiting #{wait} seconds to vote for:\n\t@#{comment.author}/#{comment.permlink}"    
+    puts "Waiting #{wait} seconds to vote for:\n\t@#{comment.author}/#{comment.permlink}"
     sleep wait
+    
+    response = @api.get_content(comment.author, comment.permlink)
+    comment = response.result
+    
+    return if skip?(comment, voters)
     
     loop do
       begin
-        break if voters.empty?
-        
         author = comment.author
         permlink = comment.permlink
         voter = voters.sample
-        
-        all_voters = comment.active_votes.map(&:voter)
-        downvoters = comment.active_votes.map do |v|
-          v.voter if v.percent < 0
-        end.compact
-        
-        # Skipping this post because of various reasons like rep too low ...
-        break if comment.author_reputation.to_i < 0
-        # ... Got a signal flag ...
-        break if (downvoters & @flag_signals).any?
-        # ... Already voted (probably because post was edited) ...
-        break if (all_voters & voters).any?
         
         wif = @voters[voter]
         tx = Radiator::Transaction.new(@options.merge(wif: wif))
@@ -99,6 +123,9 @@ def vote(comment)
             voters -= [voter]
             next
           elsif message.to_s =~ /Can only vote once every 3 seconds./
+            voters -= [voter]
+            next
+          elsif message.to_s =~ /Voting weight is too small, please accumulate more voting power or steem power./
             voters -= [voter]
             next
           end
