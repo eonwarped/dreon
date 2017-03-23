@@ -15,7 +15,7 @@ MAX_BACKOFF = 12.8
 VOTE_WEIGHT = "100.00 %"
 WAIT_RANGE = [18..30]
 
-@config_path = "#{File.dirname(__FILE__)}/drphil.yml"
+@config_path = __FILE__.sub(/\.rb$/, '.yml')
 
 unless File.exist? @config_path
   puts "Unable to find: #{@config_path}"
