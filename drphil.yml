@@ -4,6 +4,9 @@ voters:
 skip_accounts: leeroy.jenkins the.masses danlarimer ned-reddit-login
 skip_tags: nsfw test
 flag_signals: cheetah steemcleaners
+vote_weight: 100.00 %
+min_wait: 18
+max_wait: 30
 chain_options:
   chain: steem
   url: https://steemd.steemit.com

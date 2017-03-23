@@ -12,8 +12,6 @@ Bundler.require
 
 # If there are problems, this is the most time we'll wait (in seconds).
 MAX_BACKOFF = 12.8
-VOTE_WEIGHT = "100.00 %"
-WAIT_RANGE = [18..30]
 
 @config_path = __FILE__.sub(/\.rb$/, '.yml')
 
@@ -27,6 +25,10 @@ end
 @skip_accounts = @config['skip_accounts'].split(' ')
 @skip_tags = @config['skip_tags'].split(' ')
 @flag_signals = @config['flag_signals'].split(' ')
+@vote_weight = @config['vote_weight']
+@min_wait = @config['min_wait'].to_i
+@max_wait = @config['max_wait'].to_i
+@wait_range = [@min_wait..@max_wait]
 @options = {
   chain: @config['chain_options']['chain'].to_sym,
   url: @config['chain_options']['url'],
@@ -85,7 +87,7 @@ def vote(comment)
     
     return if skip?(comment, voters)
     
-    wait = Random.rand(*WAIT_RANGE) * 60
+    wait = Random.rand(*@wait_range) * 60
     puts "Waiting #{wait} seconds to vote for:\n\t@#{comment.author}/#{comment.permlink}"
     sleep wait
     
@@ -110,7 +112,7 @@ def vote(comment)
           voter: voter,
           author: author,
           permlink: permlink,
-          weight: (VOTE_WEIGHT.to_f * 100).to_i
+          weight: (@vote_weight.to_f * 100).to_i
         }
         
         op = Radiator::Operation.new(vote)
