@@ -10,6 +10,8 @@ If the complaint about Winfrey is blockchain bloat, Dr. Phil prescribes weight l
 
 ---
 
+#### Install
+
 To use this [Radiator](https://steemit.com/steem/@inertia/radiator-steem-ruby-api-client) bot:
 
 ##### Linux
@@ -46,6 +48,28 @@ $ ruby drphil.rb
 Dr. Phil will now do it's thing.  Check here to see an updated version of this bot:
 
 https://gist.github.com/inertia186/61bcc2b821aa5acb24f7fc88921950c7
+
+---
+
+#### Upgrade
+
+Typically, you can upgrade to the latest version by this command, from the original directory you cloned into:
+
+```bash
+$ git pull
+```
+
+Usually, this works fine as long as you haven't modified anything.  If you get an error, try this:
+
+```
+$ git stash --all
+$ git pull --rebase
+$ git stash pop
+```
+
+If you're still having problems, I suggest starting a new clone.
+
+---
 
 <center>
   ![](https://cl.ly/1j1Z262a2A3d/Image%202017-03-22%20at%2012.17.22%20PM.png)
