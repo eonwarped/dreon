@@ -142,12 +142,21 @@ def vote(comment)
         if !!response.error
           message = response.error.message
           if message.to_s =~ /You have already voted in a similar way./
+            puts "Failed: duplicate vote."
             voters -= [voter]
             next
           elsif message.to_s =~ /Can only vote once every 3 seconds./
-            voters -= [voter]
+            if @mode == 'winfrey'
+              puts "Retrying: voting too quickly."
+              sleep 3
+            else
+              puts "Skipped: voting too quickly."
+              voters -= [voter]
+            end
+            
             next
           elsif message.to_s =~ /Voting weight is too small, please accumulate more voting power or steem power./
+            puts "Failed: voting weight too small: #{voter}"
             voters -= [voter]
             next
           end
