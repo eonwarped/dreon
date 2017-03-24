@@ -156,7 +156,7 @@ def vote(comment)
             
             next
           elsif message.to_s =~ /Voting weight is too small, please accumulate more voting power or steem power./
-            puts "\tFailed: voting weight too small: #{voter}"
+            puts "\tFailed: voting weight too small"
             voters -= [voter]
             next
           end
