@@ -77,3 +77,10 @@ If you're still having problems, I suggest starting a new clone.
 
 See my previous Ruby How To posts in: [#radiator](https://steemit.com/created/radiator) [#ruby](https://steemit.com/created/ruby)
 
+## Get in touch!
+
+If you're using Dr. Phil, I'd love to hear from you.  Drop me a line and tell me what you think!  I'm @inertia on STEEM.
+  
+## License
+
+I don't believe in intellectual "property".  If you do, consider Dr. Phil as licensed under a Creative Commons [![CC0](http://i.creativecommons.org/p/zero/1.0/80x15.png)](http://creativecommons.org/publicdomain/zero/1.0/) License.

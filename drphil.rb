@@ -21,6 +21,7 @@ unless File.exist? @config_path
 end
 
 @config = YAML.load_file(@config_path)
+@mode = @config['mode'] || 'drphil'
 @voters = @config['voters'].map{ |v| v.split(' ')}.flatten.each_slice(2).to_h
 @skip_accounts = @config['skip_accounts'].split(' ')
 @skip_tags = @config['skip_tags'].split(' ')
@@ -95,6 +96,8 @@ def vote(comment)
     
     loop do
       begin
+        break if voters.empty?
+        
         author = comment.author
         permlink = comment.permlink
         voter = voters.sample
@@ -133,6 +136,13 @@ def vote(comment)
         
         puts "\tSuccess: #{response.result.to_json}"
         
+        if @mode == 'winfrey'
+          # The winfrey mode keeps voting until there are no more voters.
+          voters -= [voter]
+          next
+        end
+        
+        # The drphil mode only votes with one key.
         break
       rescue => e
         puts "Pausing #{backoff} :: Unable to vote with #{voter}.  #{e}"
@@ -144,7 +154,7 @@ def vote(comment)
   end
 end
 
-puts "Accounts voting: #{@voters.size} ... waiting for posts."
+puts "Current mode: #{@mode}.  Accounts voting: #{@voters.size} ... waiting for posts."
 
 loop do
   @api = Radiator::Api.new(@options)
