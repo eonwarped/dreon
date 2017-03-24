@@ -30,11 +30,23 @@ end
 @min_wait = @config['min_wait'].to_i
 @max_wait = @config['max_wait'].to_i
 @wait_range = [@min_wait..@max_wait]
+@min_rep = @config['min_rep'].to_f
 @options = {
   chain: @config['chain_options']['chain'].to_sym,
   url: @config['chain_options']['url'],
   logger: Logger.new(__FILE__.sub(/\.rb$/, '.log'))
 }
+
+def to_rep(raw)
+  raw = raw.to_i
+  neg = raw < 0
+  level = Math.log10(raw.abs)
+  level = [level - 9, 0].max
+  level = (neg ? -1 : 1) * level
+  level = (level * 9) + 25
+
+  level
+end
 
 def may_vote?(comment)
   return false unless comment.parent_author.empty?
@@ -54,9 +66,9 @@ def skip?(comment, voters)
   end.compact
   
   # Skipping this post because of various reasons like
-  if comment.author_reputation.to_i < 0
+  if (rep = to_rep(comment.author_reputation)) < @min_rep
     # ... rep too low ...
-    puts "Skipped, due to low rep:\n\t@#{comment.author}/#{comment.permlink}"
+    puts "Skipped, due to low rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
     return true
   end
   

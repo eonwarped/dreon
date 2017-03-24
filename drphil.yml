@@ -4,6 +4,7 @@ mode: drphil
 vote_weight: 100.00 %
 min_wait: 18
 max_wait: 30
+min_rep: 25.0
 
 voters:
   - social 5JrvPrQeBBvCRdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC
