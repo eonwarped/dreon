@@ -35,9 +35,6 @@ end
   logger: Logger.new(__FILE__.sub(/\.rb$/, '.log'))
 }
 
-@api = Radiator::Api.new(@options)
-@stream = Radiator::Stream.new(@options)
-
 def may_vote?(comment)
   return false unless comment.parent_author.empty?
   return false if @skip_tags.include? comment.parent_permlink
@@ -150,6 +147,9 @@ end
 puts "Accounts voting: #{@voters.size} ... waiting for posts."
 
 loop do
+  @api = Radiator::Api.new(@options)
+  @stream = Radiator::Stream.new(@options)
+
   begin
     @stream.operations(:comment) do |comment|
       next unless may_vote? comment
