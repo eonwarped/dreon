@@ -58,7 +58,10 @@ def may_vote?(comment)
 end
 
 def skip?(comment, voters)
-  return true if voters.empty?
+  if voters.empty? && @mode == 'winfrey'
+    puts "Skipped, everyone already voted:\n\t@#{comment.author}/#{comment.permlink}"
+    return true
+  end
   
   all_voters = comment.active_votes.map(&:voter)
   downvoters = comment.active_votes.map do |v|
@@ -79,7 +82,7 @@ def skip?(comment, voters)
   end
   
   if (all_voters & voters).any?
-    # ... Already voted (probably because post was edited) ...
+    # ... Someone already voted (probably because post was edited) ...
     puts "Skipped, already voted:\n\t@#{comment.author}/#{comment.permlink}"
     return true
   end
@@ -91,9 +94,14 @@ def vote(comment)
   backoff = 0.2
   
   Thread.new do
-    voters = @voters.keys
     response = @api.get_content(comment.author, comment.permlink)
     comment = response.result
+    
+    voters = if @mode == 'winfrey'
+      @voters.keys - comment.active_votes.map(&:voter)
+    else
+      @voters.keys
+    end
     
     return if skip?(comment, voters)
     
