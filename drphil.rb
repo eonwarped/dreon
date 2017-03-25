@@ -48,38 +48,54 @@ def to_rep(raw)
   level
 end
 
+def winfrey?
+  @mode == 'winfrey'
+end
+
+def tags_intersection?(json_metadata)
+  metadata = JSON[json_metadata || '{}']
+  tags = metadata['tags'] rescue []
+  
+  (@skip_tags & tags).any?
+end
+
 def may_vote?(comment)
   return false unless comment.parent_author.empty?
   return false if @skip_tags.include? comment.parent_permlink
-  return false if (@skip_tags & JSON[comment.json_metadata || '{}']['tags'] rescue []).any?
+  return false if tags_intersection? comment.json_metadata
   return false if @skip_accounts.include? comment.author
   
   true
 end
 
 def skip?(comment, voters)
-  if voters.empty? && @mode == 'winfrey'
+  if comment.max_accepted_payout.split(' ').first == '0.000'
+    puts "Skipped, payout declined:\n\t@#{comment.author}/#{comment.permlink}"
+    return true
+  end
+  
+  if voters.empty? && winfrey?
     puts "Skipped, everyone already voted:\n\t@#{comment.author}/#{comment.permlink}"
     return true
   end
   
-  all_voters = comment.active_votes.map(&:voter)
-  downvoters = comment.active_votes.map do |v|
-    v.voter if v.percent < 0
-  end.compact
-  
-  # Skipping this post because of various reasons like
   if (rep = to_rep(comment.author_reputation)) < @min_rep
     # ... rep too low ...
     puts "Skipped, due to low rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
     return true
   end
   
+  downvoters = comment.active_votes.map do |v|
+    v.voter if v.percent < 0
+  end.compact
+  
   if (downvoters & @flag_signals).any?
     # ... Got a signal flag ...
     puts "Skipped, flag signals:\n\t@#{comment.author}/#{comment.permlink}"
     return true
   end
+  
+  all_voters = comment.active_votes.map(&:voter)
   
   if (all_voters & voters).any?
     # ... Someone already voted (probably because post was edited) ...
@@ -97,7 +113,7 @@ def vote(comment)
     response = @api.get_content(comment.author, comment.permlink)
     comment = response.result
     
-    voters = if @mode == 'winfrey'
+    voters = if winfrey?
       @voters.keys - comment.active_votes.map(&:voter)
     else
       @voters.keys
@@ -146,7 +162,7 @@ def vote(comment)
             voters -= [voter]
             next
           elsif message.to_s =~ /Can only vote once every 3 seconds./
-            if @mode == 'winfrey'
+            if winfrey? || voters.size == 1
               puts "\tRetrying: voting too quickly."
               sleep 3
             else
@@ -165,7 +181,7 @@ def vote(comment)
         
         puts "\tSuccess: #{response.result.to_json}"
         
-        if @mode == 'winfrey'
+        if winfrey?
           # The winfrey mode keeps voting until there are no more voters.
           voters -= [voter]
           next
