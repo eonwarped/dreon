@@ -13,6 +13,9 @@ Bundler.require
 # If there are problems, this is the most time we'll wait (in seconds).
 MAX_BACKOFF = 12.8
 
+# We read this number of comment ops before we try a new node.
+MAX_OPS_PER_NODE = 100
+
 @config_path = __FILE__.sub(/\.rb$/, '.yml')
 
 unless File.exist? @config_path
@@ -48,9 +51,7 @@ def to_rep(raw)
   level
 end
 
-def winfrey?
-  @mode == 'winfrey'
-end
+def winfrey?; @mode == 'winfrey'; end
 
 def tags_intersection?(json_metadata)
   metadata = JSON[json_metadata || '{}']
@@ -204,9 +205,11 @@ puts "Current mode: #{@mode}.  Accounts voting: #{@voters.size} ... waiting for 
 loop do
   @api = Radiator::Api.new(@options)
   @stream = Radiator::Stream.new(@options)
+  op_idx = 0
 
   begin
     @stream.operations(:comment) do |comment|
+      break if (op_idx += 1) > MAX_OPS_PER_NODE
       next unless may_vote? comment
       
       vote(comment)
