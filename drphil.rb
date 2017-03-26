@@ -219,12 +219,12 @@ if replay > 0
     @stream = Radiator::Stream.new(@options)
     
     properties = @api.get_dynamic_global_properties.result
-    head_block_number = properties.head_block_number
-    block_number = head_block_number - replay
+    last_irreversible_block_num = properties.last_irreversible_block_num
+    block_number = last_irreversible_block_num - replay
     
     puts "Replaying from block number #{block_number} ..."
     
-    @api.get_blocks(block_number..head_block_number) do |block, number|
+    @api.get_blocks(block_number..last_irreversible_block_num) do |block, number|
       next unless !!block
       
       timestamp = Time.parse(block.timestamp + ' Z')
