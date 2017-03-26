@@ -8,7 +8,7 @@
   * `winfrey` mode that acts like the winfrey bot, all voters vote for everyone
   * `drphil` mode one random voter votes for everyone (default)
   * Added `min_rep` (default `25.0`)
-  * Added `min_wait` and `max_weight` so that you can fine-tune voting delay.
+  * Added `min_wait` and `max_wait` so that you can fine-tune voting delay.
 * Skip posts with declined payout.
 * Skip posts that already have votes from external scripts and posts that were edited.
 * New argument called `replay:` allows a replay of *n* blocks allowing you to catch up to the present.
