@@ -97,6 +97,8 @@ mode: winfrey
 
 ##### Solution: You ran `ruby drphil.yml` but you should run `ruby drphil.rb`.
 
+---
+
 <center>
   ![](https://cl.ly/1j1Z262a2A3d/Image%202017-03-22%20at%2012.17.22%20PM.png)
 </center>
