@@ -107,7 +107,7 @@ def skip?(comment, voters)
   false
 end
 
-def vote(comment)
+def vote(comment, wait_offset = 0)
   backoff = 0.2
   
   Thread.new do
@@ -122,14 +122,17 @@ def vote(comment)
     
     return if skip?(comment, voters)
     
-    wait = Random.rand(*@wait_range) * 60
-    puts "Waiting #{wait} seconds to vote for:\n\t@#{comment.author}/#{comment.permlink}"
-    sleep wait
-    
-    response = @api.get_content(comment.author, comment.permlink)
-    comment = response.result
-    
-    return if skip?(comment, voters)
+    if (wait = (Random.rand(*@wait_range) * 60) - wait_offset) > 0
+      puts "Waiting #{wait} seconds to vote for:\n\t@#{comment.author}/#{comment.permlink}"
+      sleep wait
+      
+      response = @api.get_content(comment.author, comment.permlink)
+      comment = response.result
+      
+      return if skip?(comment, voters)
+    else
+      puts "Catching up to vote for:\n\t@#{comment.author}/#{comment.permlink}"
+    end
     
     loop do
       begin
@@ -200,13 +203,48 @@ def vote(comment)
   end
 end
 
-puts "Current mode: #{@mode}.  Accounts voting: #{@voters.size} ... waiting for posts."
+puts "Current mode: #{@mode}.  Accounts voting: #{@voters.size}"
 
 loop do
   @api = Radiator::Api.new(@options)
   @stream = Radiator::Stream.new(@options)
   op_idx = 0
-
+  replay = 0
+  
+  ARGV.each do |arg|
+    if arg =~ /replay:[0-9]+/
+      replay = arg.split('replay:').last.to_i rescue 0
+    end
+  end
+  
+  if replay > 0
+    properties = @api.get_dynamic_global_properties.result
+    head_block_number = properties.head_block_number
+    block_number = head_block_number - replay
+    
+    puts "Replaying from block number #{block_number} ..."
+    
+    @api.get_blocks(block_number..head_block_number) do |block, number|
+      if !!block
+        timestamp = Time.parse(block.timestamp + ' Z')
+        now = Time.now
+        elapsed = now - timestamp
+        
+        block.transactions.each do |tx|
+          tx.operations.each do |type, op|
+            if type == 'comment' && may_vote?(op)
+              sleep 3 and vote(op, elapsed.to_i)
+            end
+          end
+        end
+      end
+    end
+    
+    puts "Done replaying."
+  end
+  
+  puts "Now waiting for new posts."
+  
   begin
     @stream.operations(:comment) do |comment|
       break if (op_idx += 1) > MAX_OPS_PER_NODE

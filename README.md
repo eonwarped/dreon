@@ -2,6 +2,20 @@
 * Tags: radiator ruby steem howto curation
 * Notes: 
 
+#### New Features
+
+* Added YAML config.
+  * `winfrey` mode that acts like the winfrey bot, all voters vote for everyone
+  * `drphil` mode one random voter votes for everyone (default)
+  * Added `min_rep` (default `25.0`)
+  * Added `min_wait` and `max_weight` so that you can fine-tune voting delay.
+* Skip posts with declined payout.
+* Skip posts that already have votes from external scripts and posts that were edited.
+* New argument called `replay:` allows a replay of *n* blocks allowing you to catch up to the present.
+  * E.g.: `ruby drphil.rb replay:90` will replay the last 90 blocks (about 4.5 minutes).
+
+#### Overview
+
 Dr. Phil (`drphil.rb`) is reimplementation of the "Winfrey" voting bot specification.  The goal is to give everyone an upvote.
 
 One optional improvement is that instead of voting 1% by 100 accounts like the Winfrey bot spec, this script can vote 100% with 1 randomly chosen account.
@@ -70,6 +84,18 @@ $ git stash pop
 If you're still having problems, I suggest starting a new clone.
 
 ---
+
+#### Troubleshooting
+
+##### Problem: What does this error mean?
+
+```
+drphil.yml:3: syntax error, unexpected ':', expecting end-of-input
+mode: winfrey
+     ^
+```
+
+##### Solution: You ran `ruby drphil.yml` but you should run `ruby drphil.rb`.
 
 <center>
   ![](https://cl.ly/1j1Z262a2A3d/Image%202017-03-22%20at%2012.17.22%20PM.png)
