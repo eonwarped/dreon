@@ -55,7 +55,7 @@ def winfrey?; @mode == 'winfrey'; end
 
 def tags_intersection?(json_metadata)
   metadata = JSON[json_metadata || '{}']
-  tags = metadata['tags'] rescue []
+  tags = metadata['tags'] || [] rescue []
   
   (@skip_tags & tags).any?
 end
