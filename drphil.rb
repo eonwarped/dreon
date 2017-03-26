@@ -205,20 +205,19 @@ def vote(comment, wait_offset = 0)
 end
 
 puts "Current mode: #{@mode}.  Accounts voting: #{@voters.size}"
-
-loop do
-  @api = Radiator::Api.new(@options)
-  @stream = Radiator::Stream.new(@options)
-  op_idx = 0
-  replay = 0
+replay = 0
   
-  ARGV.each do |arg|
-    if arg =~ /replay:[0-9]+/
-      replay = arg.split('replay:').last.to_i rescue 0
-    end
+ARGV.each do |arg|
+  if arg =~ /replay:[0-9]+/
+    replay = arg.split('replay:').last.to_i rescue 0
   end
-  
-  if replay > 0
+end
+
+if replay > 0
+  Thread.new do
+    @api = Radiator::Api.new(@options)
+    @stream = Radiator::Stream.new(@options)
+    
     properties = @api.get_dynamic_global_properties.result
     head_block_number = properties.head_block_number
     block_number = head_block_number - replay
@@ -241,6 +240,12 @@ loop do
     
     puts "Done replaying."
   end
+end
+
+loop do
+  @api = Radiator::Api.new(@options)
+  @stream = Radiator::Stream.new(@options)
+  op_idx = 0
   
   puts "Now waiting for new posts."
   
