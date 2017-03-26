@@ -242,12 +242,12 @@ if replay > 0
   end
 end
 
+puts "Now waiting for new posts."
+
 loop do
   @api = Radiator::Api.new(@options)
   @stream = Radiator::Stream.new(@options)
   op_idx = 0
-  
-  puts "Now waiting for new posts."
   
   begin
     @stream.operations(:comment) do |comment|
