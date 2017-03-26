@@ -132,6 +132,7 @@ def vote(comment, wait_offset = 0)
       return if skip?(comment, voters)
     else
       puts "Catching up to vote for:\n\t@#{comment.author}/#{comment.permlink}"
+      sleep 3
     end
     
     loop do
@@ -225,17 +226,15 @@ loop do
     puts "Replaying from block number #{block_number} ..."
     
     @api.get_blocks(block_number..head_block_number) do |block, number|
-      if !!block
-        timestamp = Time.parse(block.timestamp + ' Z')
-        now = Time.now
-        elapsed = now - timestamp
-        
-        block.transactions.each do |tx|
-          tx.operations.each do |type, op|
-            if type == 'comment' && may_vote?(op)
-              sleep 3 and vote(op, elapsed.to_i)
-            end
-          end
+      next unless !!block
+      
+      timestamp = Time.parse(block.timestamp + ' Z')
+      now = Time.now
+      elapsed = now - timestamp
+      
+      block.transactions.each do |tx|
+        tx.operations.each do |type, op|
+          vote(op, elapsed.to_i) if type == 'comment' && may_vote?(op)
         end
       end
     end
