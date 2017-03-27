@@ -3,6 +3,7 @@
 mode: drphil
 vote_weight: 100.00 %
 favorites_vote_weight: 100.00 %
+enable_comments: false
 min_wait: 18
 max_wait: 30
 min_rep: 25.0
@@ -11,7 +12,7 @@ voters:
   - social 5JrvPrQeBBvCRdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC
   - bad.account 5XXXBadWifXXXdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC
 
-favorites_accounts: inertia banjo
+favorite_accounts: inertia banjo
 skip_accounts: leeroy.jenkins the.masses danlarimer ned-reddit-login
 skip_tags: nsfw test
 flag_signals: cheetah steemcleaners

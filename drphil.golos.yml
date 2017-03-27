@@ -12,7 +12,7 @@ voters:
   - social 5JrvPrQeBBvCRdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC
   - bad.account 5XXXBadWifXXXdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC
 
-favorites_accounts: inertia banjo
+favorite_accounts: inertia banjo
 skip_accounts: leeroy.jenkins the.masses danlarimer ned-reddit-login
 skip_tags: nsfw test
 flag_signals: cheetah steemcleaners ru--mat bm-open

@@ -26,11 +26,12 @@ end
 @config = YAML.load_file(@config_path)
 @mode = @config['mode'] || 'drphil'
 @voters = @config['voters'].map{ |v| v.split(' ')}.flatten.each_slice(2).to_h
-@favorites_accounts = @config['favorites_accounts'].split(' ')
-@skip_accounts = @config['skip_accounts'].split(' ')
-@skip_tags = @config['skip_tags'].split(' ')
-@flag_signals = @config['flag_signals'].split(' ')
+@favorite_accounts = @config['favorite_accounts'].to_s.split(' ')
 @enable_comments = @config['enable_comments']
+@skip_accounts = @config['skip_accounts'].to_s.split(' ')
+@skip_tags = @config['skip_tags'].to_s.split(' ')
+@flag_signals = @config['flag_signals'].to_s.split(' ')
+@vote_signals = @config['vote_signals'].to_s.split(' ')
 @vote_weight = @config['vote_weight']
 @favorites_vote_weight = @config['favorites_vote_weight']
 @min_wait = @config['min_wait'].to_i
@@ -112,7 +113,7 @@ def skip?(comment, voters)
 end
 
 def vote_weight(author)
-  if @favorites_accounts.include? author
+  if @favorite_accounts.include? author
     (@favorites_vote_weight.to_f * 100).to_i
   else
     (@vote_weight.to_f * 100).to_i
