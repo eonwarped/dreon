@@ -8,6 +8,7 @@ only_first_posts: false
 min_wait: 18
 max_wait: 30
 min_rep: 25.0
+max_rep: 99.9
 
 voters:
   - social 5JrvPrQeBBvCRdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC

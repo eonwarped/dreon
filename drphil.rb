@@ -40,6 +40,7 @@ end
 @wait_range = [@min_wait..@max_wait]
 @min_rep = @config['min_rep']
 @min_rep = @min_rep =~ /dynamic:[0-9]+/ ? @min_rep : @min_rep.to_f
+@max_rep = @config['max_rep'].to_f
 @options = {
   chain: @config['chain_options']['chain'].to_sym,
   url: @config['chain_options']['url'],
@@ -135,6 +136,12 @@ def skip?(comment, voters)
       puts "Skipped, due to low rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
       return true
     end
+  end
+    
+  if (rep = to_rep(comment.author_reputation)) > @max_rep
+    # ... rep too high ...
+    puts "Skipped, due to high rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
+    return true
   end
   
   downvoters = comment.active_votes.map do |v|
