@@ -33,14 +33,14 @@ end
 @skip_tags = @config['skip_tags'].to_s.split(' ')
 @flag_signals = @config['flag_signals'].to_s.split(' ')
 @vote_signals = @config['vote_signals'].to_s.split(' ')
-@vote_weight = @config['vote_weight']
-@favorites_vote_weight = @config['favorites_vote_weight']
+@vote_weight = (@config['vote_weight'] || '100.0 %')
+@favorites_vote_weight = (@config['favorites_vote_weight'] || '100.0 %')
 @min_wait = @config['min_wait'].to_i
 @max_wait = @config['max_wait'].to_i
 @wait_range = [@min_wait..@max_wait]
-@min_rep = @config['min_rep']
+@min_rep = (@config['min_rep'] || 25.0)
 @min_rep = @min_rep =~ /dynamic:[0-9]+/ ? @min_rep : @min_rep.to_f
-@max_rep = @config['max_rep'].to_f
+@max_rep = (@config['max_rep'] || 99.9).to_f
 @options = {
   chain: @config['chain_options']['chain'].to_sym,
   url: @config['chain_options']['url'],
