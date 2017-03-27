@@ -41,6 +41,7 @@ end
   url: @config['chain_options']['url'],
   logger: Logger.new(__FILE__.sub(/\.rb$/, '.log'))
 }
+@threads = {}
 
 def to_rep(raw)
   raw = raw.to_i
@@ -119,8 +120,20 @@ end
 
 def vote(comment, wait_offset = 0)
   backoff = 0.2
+  slug = "@#{comment.author}/#{comment.permlink}"
   
-  Thread.new do
+  @threads.each do |k, t|
+    @threads.delete(k) unless t.alive?
+  end
+  
+  print "Pending votes: #{@threads.size} ... "
+  
+  if @threads.keys.include? slug
+    puts "Skipped, vote already pending:\n\t#{slug}"
+    return
+  end
+  
+  @threads[slug] = Thread.new do
     response = @api.get_content(comment.author, comment.permlink)
     comment = response.result
     
@@ -139,7 +152,7 @@ def vote(comment, wait_offset = 0)
     end
     
     if (wait = (Random.rand(*@wait_range) * 60) - wait_offset) > 0
-      puts "Waiting #{wait} seconds to vote for:\n\t@#{comment.author}/#{comment.permlink}"
+      puts "Waiting #{wait.to_i} seconds to vote for:\n\t#{slug}"
       sleep wait
       
       response = @api.get_content(comment.author, comment.permlink)
@@ -147,7 +160,7 @@ def vote(comment, wait_offset = 0)
       
       return if skip?(comment, voters)
     else
-      puts "Catching up to vote for:\n\t@#{comment.author}/#{comment.permlink}"
+      puts "Catching up to vote for:\n\t#{slug}"
       sleep 3
     end
     
@@ -162,7 +175,7 @@ def vote(comment, wait_offset = 0)
         wif = @voters[voter]
         tx = Radiator::Transaction.new(@options.merge(wif: wif))
         
-        puts "#{voter} voting for @#{author}/#{permlink}"
+        puts "#{voter} voting for #{slug}"
         
         vote = {
           type: :vote,
