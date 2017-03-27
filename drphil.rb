@@ -122,6 +122,12 @@ def vote(comment, wait_offset = 0)
     
     return if skip?(comment, voters)
     
+    if wait_offset == 0
+      timestamp = Time.parse(comment.created + ' Z')
+      now = Time.now.utc
+      wait_offset = now - timestamp
+    end
+    
     if (wait = (Random.rand(*@wait_range) * 60) - wait_offset) > 0
       puts "Waiting #{wait} seconds to vote for:\n\t@#{comment.author}/#{comment.permlink}"
       sleep wait
@@ -228,7 +234,7 @@ if replay > 0
       next unless !!block
       
       timestamp = Time.parse(block.timestamp + ' Z')
-      now = Time.now
+      now = Time.now.utc
       elapsed = now - timestamp
       
       block.transactions.each do |tx|
@@ -251,10 +257,11 @@ loop do
   
   begin
     @stream.operations(:comment) do |comment|
-      break if (op_idx += 1) > MAX_OPS_PER_NODE
       next unless may_vote? comment
       
       vote(comment)
+      
+      break if (op_idx += 1) > MAX_OPS_PER_NODE
     end
   rescue => e
     puts "Unable to stream on current node.  Retrying in 5 seconds.  Error: #{e}"
