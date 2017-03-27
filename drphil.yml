@@ -4,6 +4,7 @@ mode: drphil
 vote_weight: 100.00 %
 favorites_vote_weight: 100.00 %
 enable_comments: false
+only_first_posts: false
 min_wait: 18
 max_wait: 30
 min_rep: 25.0

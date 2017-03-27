@@ -28,6 +28,7 @@ end
 @voters = @config['voters'].map{ |v| v.split(' ')}.flatten.each_slice(2).to_h
 @favorite_accounts = @config['favorite_accounts'].to_s.split(' ')
 @enable_comments = @config['enable_comments']
+@only_first_posts = @config['only_first_posts']
 @skip_accounts = @config['skip_accounts'].to_s.split(' ')
 @skip_tags = @config['skip_tags'].to_s.split(' ')
 @flag_signals = @config['flag_signals'].to_s.split(' ')
@@ -95,6 +96,21 @@ end
       
 
 def skip?(comment, voters)
+  if !!@only_first_posts
+    begin
+      response = @api.get_accounts([comment.author])
+      account = response.result.last
+      
+      if account.post_count > 1
+        puts "Skipped, not first post:\n\t@#{comment.author}/#{comment.permlink}"
+        return true
+      end
+    rescue => e
+      puts "Warning: #{e}"
+      return true
+    end
+  end
+  
   if comment.max_accepted_payout.split(' ').first == '0.000'
     puts "Skipped, payout declined:\n\t@#{comment.author}/#{comment.permlink}"
     return true
