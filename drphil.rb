@@ -30,6 +30,7 @@ end
 @skip_accounts = @config['skip_accounts'].split(' ')
 @skip_tags = @config['skip_tags'].split(' ')
 @flag_signals = @config['flag_signals'].split(' ')
+@enable_comments = @config['enable_comments']
 @vote_weight = @config['vote_weight']
 @favorites_vote_weight = @config['favorites_vote_weight']
 @min_wait = @config['min_wait'].to_i
@@ -64,7 +65,7 @@ def tags_intersection?(json_metadata)
 end
 
 def may_vote?(comment)
-  return false unless comment.parent_author.empty?
+  return false if !@enable_comments && !comment.parent_author.empty?
   return false if @skip_tags.include? comment.parent_permlink
   return false if tags_intersection? comment.json_metadata
   return false if @skip_accounts.include? comment.author
