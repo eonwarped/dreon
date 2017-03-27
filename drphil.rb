@@ -37,7 +37,8 @@ end
 @min_wait = @config['min_wait'].to_i
 @max_wait = @config['max_wait'].to_i
 @wait_range = [@min_wait..@max_wait]
-@min_rep = @config['min_rep'].to_f
+@min_rep = @config['min_rep']
+@min_rep = @min_rep =~ /dynamic:[0-9]+/ ? @min_rep : @min_rep.to_f
 @options = {
   chain: @config['chain_options']['chain'].to_sym,
   url: @config['chain_options']['url'],
@@ -74,6 +75,25 @@ def may_vote?(comment)
   true
 end
 
+def min_trending_rep(limit)
+  begin
+    if @min_trending_rep.nil? || Random.rand(0..100) == 13
+      response = @api.get_discussions_by_trending(tag: '', limit: limit)
+      raise response.error.message if !!response.error
+      
+      trending = response.result
+      @min_trending_rep = trending.map do |c|
+        c.author_reputation.to_i
+      end.min
+    end
+  rescue => e
+    puts "Warning: #{e}"
+  end
+  
+  @min_trending_rep || 0
+end
+      
+
 def skip?(comment, voters)
   if comment.max_accepted_payout.split(' ').first == '0.000'
     puts "Skipped, payout declined:\n\t@#{comment.author}/#{comment.permlink}"
@@ -85,10 +105,20 @@ def skip?(comment, voters)
     return true
   end
   
-  if (rep = to_rep(comment.author_reputation)) < @min_rep
-    # ... rep too low ...
-    puts "Skipped, due to low rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
-    return true
+  if @min_rep =~ /dynamic:[0-9]+/
+    limit = @min_rep.split(':').last.to_i
+    
+    if (rep = comment.author_reputation.to_i) < min_trending_rep(limit)
+      # ... rep too low ...
+      puts "Skipped, due to low dynamic rep (#{('%.3f' % to_rep(rep))}):\n\t@#{comment.author}/#{comment.permlink}"
+      return true
+    end
+  else
+    if (rep = to_rep(comment.author_reputation)) < @min_rep
+      # ... rep too low ...
+      puts "Skipped, due to low rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
+      return true
+    end
   end
   
   downvoters = comment.active_votes.map do |v|
