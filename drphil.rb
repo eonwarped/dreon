@@ -95,9 +95,19 @@ def skip?(comment, voters)
     v.voter if v.percent < 0
   end.compact
   
-  if (downvoters & @flag_signals).any?
+  if (signal = downvoters & @flag_signals).any?
     # ... Got a signal flag ...
-    puts "Skipped, flag signals:\n\t@#{comment.author}/#{comment.permlink}"
+    puts "Skipped, flag signals (#{signals.join(' ')} flagged):\n\t@#{comment.author}/#{comment.permlink}"
+    return true
+  end
+  
+  upvoters = comment.active_votes.map do |v|
+    v.voter if v.percent > 0
+  end.compact
+  
+  if (signals = upvoters & @vote_signals).any?
+    # ... Got a signal vote ...
+    puts "Skipped, vote signals (#{signals.join(' ')} voted):\n\t@#{comment.author}/#{comment.permlink}"
     return true
   end
   

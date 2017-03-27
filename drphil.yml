@@ -16,6 +16,7 @@ favorite_accounts: inertia banjo
 skip_accounts: leeroy.jenkins the.masses danlarimer ned-reddit-login
 skip_tags: nsfw test
 flag_signals: cheetah steemcleaners
+vote_signals: 
 
 chain_options:
   chain: steem
