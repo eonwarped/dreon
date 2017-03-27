@@ -26,10 +26,12 @@ end
 @config = YAML.load_file(@config_path)
 @mode = @config['mode'] || 'drphil'
 @voters = @config['voters'].map{ |v| v.split(' ')}.flatten.each_slice(2).to_h
+@favorites_accounts = @config['favorites_accounts'].split(' ')
 @skip_accounts = @config['skip_accounts'].split(' ')
 @skip_tags = @config['skip_tags'].split(' ')
 @flag_signals = @config['flag_signals'].split(' ')
 @vote_weight = @config['vote_weight']
+@favorites_vote_weight = @config['favorites_vote_weight']
 @min_wait = @config['min_wait'].to_i
 @max_wait = @config['max_wait'].to_i
 @wait_range = [@min_wait..@max_wait]
@@ -107,6 +109,14 @@ def skip?(comment, voters)
   false
 end
 
+def vote_weight(author)
+  if @favorites_accounts.include? author
+    (@favorites_vote_weight.to_f * 100).to_i
+  else
+    (@vote_weight.to_f * 100).to_i
+  end
+end
+
 def vote(comment, wait_offset = 0)
   backoff = 0.2
   
@@ -159,7 +169,7 @@ def vote(comment, wait_offset = 0)
           voter: voter,
           author: author,
           permlink: permlink,
-          weight: (@vote_weight.to_f * 100).to_i
+          weight: vote_weight(author)
         }
         
         op = Radiator::Operation.new(vote)

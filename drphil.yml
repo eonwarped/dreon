@@ -2,6 +2,7 @@
 # mode: winfrey - cycles all voters on each post
 mode: drphil
 vote_weight: 100.00 %
+favorites_vote_weight: 100.00 %
 min_wait: 18
 max_wait: 30
 min_rep: 25.0
@@ -10,6 +11,7 @@ voters:
   - social 5JrvPrQeBBvCRdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC
   - bad.account 5XXXBadWifXXXdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC
 
+favorites_accounts: inertia banjo
 skip_accounts: leeroy.jenkins the.masses danlarimer ned-reddit-login
 skip_tags: nsfw test
 flag_signals: cheetah steemcleaners
