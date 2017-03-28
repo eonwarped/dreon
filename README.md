@@ -4,14 +4,31 @@
 
 #### New Features
 
-* Added YAML config.
+* Added `favorite_accounts` list and separate `favorites_vote_weight` option.
+* Added `enable_comments` option to vote for post replies (default false).
+* Added `only_first_posts` option to only vote on an author's first post (default false).
+* Added `max_rep` option, useful for limiting votes to newer authors (default 99.9).
+* Added `vote_signals` account list.
+  * Optionally allows multiple bot instances to cooperate by avoiding vote swarms.
+  * If enabled, this feature allows cooperation without sharing keys (in `drphil` mode).
+* `min_rep` can now accept either a static reputation or a dynamic property.
+  * Existing static reputation still supported, e.g.: `25.0`
+  * Added dynamic reputation, e.g.: `dynamic:100`.  This will occasionally query the top 100 trending posts and use the minimum author reputation.
+* Thread management
+  * Counter displayed so you know what kind of impact `^C` will have.
+  * This also keeps the number of threads down when authors edit before Dr. Phil votes.
+* Now streaming on Last Irreversible Block Number, just to be fancy.
+
+#### Features
+
+* YAML config.
   * `winfrey` mode that acts like the winfrey bot, all voters vote for everyone
   * `drphil` mode one random voter votes for everyone (default)
-  * Added `min_rep` (default `25.0`)
-  * Added `min_wait` and `max_wait` so that you can fine-tune voting delay.
+  * `min_rep` (default `25.0`)
+  * `min_wait` and `max_wait` so that you can fine-tune voting delay.
 * Skip posts with declined payout.
 * Skip posts that already have votes from external scripts and posts that were edited.
-* New argument called `replay:` allows a replay of *n* blocks allowing you to catch up to the present.
+* Argument called `replay:` allows a replay of *n* blocks allowing you to catch up to the present.
   * E.g.: `ruby drphil.rb replay:90` will replay the last 90 blocks (about 4.5 minutes).
 
 #### Overview
@@ -100,14 +117,14 @@ mode: winfrey
 ---
 
 <center>
-  ![](https://cl.ly/1j1Z262a2A3d/Image%202017-03-22%20at%2012.17.22%20PM.png)
+  ![](http://i.imgur.com/qUZYLiQ.png)
 </center>
 
 See my previous Ruby How To posts in: [#radiator](https://steemit.com/created/radiator) [#ruby](https://steemit.com/created/ruby)
 
 ## Get in touch!
 
-If you're using Dr. Phil, I'd love to hear from you.  Drop me a line and tell me what you think!  I'm @inertia on STEEM.
+If you're using Dr. Phil, I'd love to hear from you.  Drop me a line and tell me what you think!  I'm @inertia on STEEM and [SteemSpeak](http://discord.steemspeak.com).
   
 ## License
 
