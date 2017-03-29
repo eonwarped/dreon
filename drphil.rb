@@ -23,9 +23,24 @@ unless File.exist? @config_path
   exit
 end
 
+def parse_voters(voters)
+  a = voters.map{ |v| v.split(' ')}.flatten.each_slice(2)
+  
+  return a.to_h if a.respond_to? :to_h
+  
+  hash = {}
+    
+  voters.each_with_index do |e|
+    key, val = e.split(' ')
+    hash[key] = val
+  end
+  
+  hash
+end
+
 @config = YAML.load_file(@config_path)
 @mode = @config['mode'] || 'drphil'
-@voters = @config['voters'].map{ |v| v.split(' ')}.flatten.each_slice(2).to_h
+@voters = parse_voters(@config['voters'])
 @favorite_accounts = @config['favorite_accounts'].to_s.split(' ')
 @enable_comments = @config['enable_comments']
 @only_first_posts = @config['only_first_posts']
@@ -236,7 +251,10 @@ def vote(comment, wait_offset = 0)
         author = comment.author
         permlink = comment.permlink
         voter = voters.sample
+        weight = vote_weight(author)
         
+        break if weight == 0.00
+                
         wif = @voters[voter]
         tx = Radiator::Transaction.new(@options.merge(wif: wif))
         
@@ -247,7 +265,7 @@ def vote(comment, wait_offset = 0)
           voter: voter,
           author: author,
           permlink: permlink,
-          weight: vote_weight(author)
+          weight: weight
         }
         
         op = Radiator::Operation.new(vote)
