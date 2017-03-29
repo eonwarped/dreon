@@ -137,26 +137,28 @@ def skip?(comment, voters)
     return true
   end
   
-  if @min_rep =~ /dynamic:[0-9]+/
-    limit = @min_rep.split(':').last.to_i
-    
-    if (rep = comment.author_reputation.to_i) < min_trending_rep(limit)
-      # ... rep too low ...
-      puts "Skipped, due to low dynamic rep (#{('%.3f' % to_rep(rep))}):\n\t@#{comment.author}/#{comment.permlink}"
+  unless @favorite_accounts.include? comment.author
+    if @min_rep =~ /dynamic:[0-9]+/
+      limit = @min_rep.split(':').last.to_i
+      
+      if (rep = comment.author_reputation.to_i) < min_trending_rep(limit)
+        # ... rep too low ...
+        puts "Skipped, due to low dynamic rep (#{('%.3f' % to_rep(rep))}):\n\t@#{comment.author}/#{comment.permlink}"
+        return true
+      end
+    else
+      if (rep = to_rep(comment.author_reputation)) < @min_rep
+        # ... rep too low ...
+        puts "Skipped, due to low rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
+        return true
+      end
+    end
+      
+    if (rep = to_rep(comment.author_reputation)) > @max_rep
+      # ... rep too high ...
+      puts "Skipped, due to high rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
       return true
     end
-  else
-    if (rep = to_rep(comment.author_reputation)) < @min_rep
-      # ... rep too low ...
-      puts "Skipped, due to low rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
-      return true
-    end
-  end
-    
-  if (rep = to_rep(comment.author_reputation)) > @max_rep
-    # ... rep too high ...
-    puts "Skipped, due to high rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
-    return true
   end
   
   downvoters = comment.active_votes.map do |v|
