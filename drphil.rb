@@ -112,6 +112,11 @@ end
       
 
 def skip?(comment, voters)
+  if (cashout_time = Time.parse(comment.cashout_time + 'Z')) < Time.now.utc
+    puts "Skipped, cashout time has passed (#{cashout_time}):\n\t@#{comment.author}/#{comment.permlink}"
+    return true
+  end
+  
   if !!@only_first_posts
     begin
       response = @api.get_accounts([comment.author])
