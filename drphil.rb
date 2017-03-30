@@ -24,30 +24,60 @@ unless File.exist? @config_path
 end
 
 def parse_voters(voters)
-  a = voters.map{ |v| v.split(' ')}.flatten.each_slice(2)
-  
-  return a.to_h if a.respond_to? :to_h
-  
-  hash = {}
+  case voters
+  when String
+    raise "Not found: #{voters}" unless File.exist? voters
     
-  voters.each_with_index do |e|
-    key, val = e.split(' ')
-    hash[key] = val
+    f = File.open(voters)
+    hash = {}
+    f.read.each_line do |pair|
+      key, value = pair.split(' ')
+      hash[key] = value if !!key && !!hash
+    end
+    
+    hash
+  when Array
+    a = voters.map{ |v| v.split(' ')}.flatten.each_slice(2)
+    
+    return a.to_h if a.respond_to? :to_h
+    
+    hash = {}
+      
+    voters.each_with_index do |e|
+      key, val = e.split(' ')
+      hash[key] = val
+    end
+    
+    hash
+  else; raise "Unsupported voters: #{voters}"
   end
-  
-  hash
+end
+
+def parse_list(list)
+  if !!list && File.exist?(list)
+    f = File.open(list)
+    elements = []
+    
+    f.each_line do |line|
+      elements += line.split(' ')
+    end
+    
+    elements.uniq.reject(&:empty?).reject(&:nil?)
+  else
+    list.to_s.split(' ')
+  end
 end
 
 @config = YAML.load_file(@config_path)
 @mode = @config['mode'] || 'drphil'
 @voters = parse_voters(@config['voters'])
-@favorite_accounts = @config['favorite_accounts'].to_s.split(' ')
+@favorite_accounts = parse_list(@config['favorite_accounts'])
 @enable_comments = @config['enable_comments']
 @only_first_posts = @config['only_first_posts']
-@skip_accounts = @config['skip_accounts'].to_s.split(' ')
-@skip_tags = @config['skip_tags'].to_s.split(' ')
-@flag_signals = @config['flag_signals'].to_s.split(' ')
-@vote_signals = @config['vote_signals'].to_s.split(' ')
+@skip_accounts = parse_list(@config['skip_accounts'])
+@skip_tags = parse_list(@config['skip_tags'])
+@flag_signals = parse_list(@config['flag_signals'])
+@vote_signals = parse_list(@config['vote_signals'])
 @vote_weight = (@config['vote_weight'] || '100.0 %')
 @favorites_vote_weight = (@config['favorites_vote_weight'] || '100.0 %')
 @min_wait = @config['min_wait'].to_i
