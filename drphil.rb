@@ -91,6 +91,12 @@ end
   url: @config['chain_options']['url'],
   logger: Logger.new(__FILE__.sub(/\.rb$/, '.log'))
 }
+
+if @vote_weight.to_f == 0.0 && @favorites_vote_weight.to_f == 0.0
+  puts "WARNING: Both vote_weight and favorites_vote_weight are zero.  This is a bot that does nothing."
+  @mode = 'seinfeld'
+end
+
 @threads = {}
 
 def to_rep(raw)
@@ -290,7 +296,7 @@ def vote(comment, wait_offset = 0)
         voter = voters.sample
         weight = vote_weight(author)
         
-        break if weight == 0.00
+        break if weight == 0.0
                 
         wif = @voters[voter]
         tx = Radiator::Transaction.new(@options.merge(wif: wif))
