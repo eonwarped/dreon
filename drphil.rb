@@ -372,6 +372,8 @@ loop do
       break if (op_idx += 1) > MAX_OPS_PER_NODE
     end
   rescue => e
+    @api.shutdown
+    @stream.shutdown
     puts "Unable to stream on current node.  Retrying in 5 seconds.  Error: #{e}"
     sleep 5
   end
