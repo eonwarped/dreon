@@ -124,7 +124,7 @@ end
 
 def min_trending_rep(limit)
   begin
-    if @min_trending_rep.nil? || Random.rand(0..100) == 13
+    if @min_trending_rep.nil? || Random.rand(0..limit) == 13
       response = @api.get_discussions_by_trending(tag: '', limit: limit)
       raise response.error.message if !!response.error
       
