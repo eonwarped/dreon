@@ -9,7 +9,7 @@
 
 #### New Features
 
-* Now checking for new HF18 `cashout_time` value.
+* Now checking for new HF18 `cashout_time` value (of present).
   * This will skip voting when authors edit their old archived posts.
 * Now checking `vote_weight: 0.00 %` and skipping without broadcast.
   * This is useful for special configurations that *only* vote for favorites.
