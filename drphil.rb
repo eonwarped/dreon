@@ -416,7 +416,6 @@ loop do
     end
   rescue => e
     @api.shutdown
-    @stream.shutdown
     puts "Unable to stream on current node.  Retrying in 5 seconds.  Error: #{e}"
     sleep 5
   end
