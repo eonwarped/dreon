@@ -75,7 +75,6 @@ rules = @config['voting_rules']
   mode: rules['mode'] || 'drphil',
   vote_weight: (((rules['vote_weight'] || '100.0 %').to_f) * 100).to_i,
   favorites_vote_weight: (((rules['favorites_vote_weight'] || '100.0 %').to_f) * 100).to_i,
-  favorite_accounts: parse_list(rules['favorite_accounts']),
   enable_comments: rules['enable_comments'],
   only_first_posts: rules['only_first_posts'],
   min_wait: rules['min_wait'].to_i,
@@ -87,13 +86,14 @@ rules = @config['voting_rules']
 
 @voting_rules[:wait_range] = [@voting_rules[:min_wait]..@voting_rules[:max_wait]]
 
-@voting_rules[:min_rep] = unless @voting_rules[:min_rep] =~ /dynamic:[0-9]+/
-  @voting_rules[:min_rep].to_f
+unless @voting_rules[:min_rep] =~ /dynamic:[0-9]+/
+  @voting_rules[:min_rep] = @voting_rules[:min_rep].to_f
 end
 
 @voting_rules = Struct.new(*@voting_rules.keys).new(*@voting_rules.values)
 
 @voters = parse_voters(@config['voters'])
+@favorite_accounts = parse_list(@config['favorite_accounts'])
 @skip_accounts = parse_list(@config['skip_accounts'])
 @skip_tags = parse_list(@config['skip_tags'])
 @flag_signals = parse_list(@config['flag_signals'])
@@ -239,7 +239,7 @@ def skip?(comment, voters)
     return true
   end
   
-  unless @voting_rules.favorite_accounts.include? comment.author
+  unless @favorite_accounts.include? comment.author
     if @voting_rules.min_rep =~ /dynamic:[0-9]+/
       limit = @voting_rules.min_rep.split(':').last.to_i
       
@@ -295,7 +295,7 @@ def skip?(comment, voters)
 end
 
 def vote_weight(author)
-  if @voting_rules.favorite_accounts.include? author
+  if @favorite_accounts.include? author
     @voting_rules.favorites_vote_weight
   else
     @voting_rules.vote_weight
