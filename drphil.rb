@@ -14,7 +14,7 @@ Bundler.require
 MAX_BACKOFF = 12.8
 
 # We read this number of comment ops before we try a new node.
-MAX_OPS_PER_NODE = 100
+MAX_OPS_PER_NODE = 10
 
 @config_path = __FILE__.sub(/\.rb$/, '.yml')
 
@@ -69,32 +69,49 @@ def parse_list(list)
 end
 
 @config = YAML.load_file(@config_path)
-@mode = @config['mode'] || 'drphil'
+rules = @config['voting_rules']
+
+@voting_rules = {
+  mode: rules['mode'] || 'drphil',
+  vote_weight: (((rules['vote_weight'] || '100.0 %').to_f) * 100).to_i,
+  favorites_vote_weight: (((rules['favorites_vote_weight'] || '100.0 %').to_f) * 100).to_i,
+  favorite_accounts: parse_list(rules['favorite_accounts']),
+  enable_comments: rules['enable_comments'],
+  only_first_posts: rules['only_first_posts'],
+  min_wait: rules['min_wait'].to_i,
+  max_wait: rules['max_wait'].to_i,
+  min_rep: (rules['min_rep'] || 25.0),
+  max_rep: (rules['max_rep'] || 99.9).to_f,
+  min_voting_power: (((rules['min_voting_power'] || '0.0 %').to_f) * 100).to_i
+}
+
+@voting_rules[:wait_range] = [@voting_rules[:min_wait]..@voting_rules[:max_wait]]
+
+@voting_rules[:min_rep] = unless @voting_rules[:min_rep] =~ /dynamic:[0-9]+/
+  @voting_rules[:min_rep].to_f
+end
+
+@voting_rules = Struct.new(*@voting_rules.keys).new(*@voting_rules.values)
+
 @voters = parse_voters(@config['voters'])
-@favorite_accounts = parse_list(@config['favorite_accounts'])
-@enable_comments = @config['enable_comments']
-@only_first_posts = @config['only_first_posts']
 @skip_accounts = parse_list(@config['skip_accounts'])
 @skip_tags = parse_list(@config['skip_tags'])
 @flag_signals = parse_list(@config['flag_signals'])
 @vote_signals = parse_list(@config['vote_signals'])
-@vote_weight = (@config['vote_weight'] || '100.0 %')
-@favorites_vote_weight = (@config['favorites_vote_weight'] || '100.0 %')
-@min_wait = @config['min_wait'].to_i
-@max_wait = @config['max_wait'].to_i
-@wait_range = [@min_wait..@max_wait]
-@min_rep = (@config['min_rep'] || 25.0)
-@min_rep = @min_rep =~ /dynamic:[0-9]+/ ? @min_rep : @min_rep.to_f
-@max_rep = (@config['max_rep'] || 99.9).to_f
+  
 @options = {
   chain: @config['chain_options']['chain'].to_sym,
   url: @config['chain_options']['url'],
   logger: Logger.new(__FILE__.sub(/\.rb$/, '.log'))
 }
 
-if @vote_weight.to_f == 0.0 && @favorites_vote_weight.to_f == 0.0
+def winfrey?; @voting_rules.mode == 'winfrey'; end
+def drphil?; @voting_rules.mode == 'drphil'; end
+def seinfeld?; @voting_rules.mode == 'seinfeld'; end
+
+if !seinfeld? && @voting_rules.vote_weight == 0 && @voting_rules.favorites_vote_weight == 0
   puts "WARNING: Both vote_weight and favorites_vote_weight are zero.  This is a bot that does nothing."
-  @mode = 'seinfeld'
+  @voting_rules.mode = 'seinfeld'
 end
 
 @threads = {}
@@ -110,7 +127,50 @@ def to_rep(raw)
   level
 end
 
-def winfrey?; @mode == 'winfrey'; end
+def poll_voting_power
+  response = @api.get_accounts(@voters.keys)
+  accounts = response.result
+  
+  @voting_power = {}
+  
+  accounts.each do |account|
+    @voting_power[account.name] = account.voting_power
+  end
+  
+  @min_voting_power = accounts.map(&:voting_power).min
+  @max_voting_power = accounts.map(&:voting_power).max
+  @average_voting_power = accounts.map(&:voting_power).inject(:+) / accounts.size
+end
+
+def summary_voting_power
+  poll_voting_power
+  vp = @average_voting_power / 100.0
+  summary = []
+  
+  summary << if @voting_power.size > 1
+    "Average remaining voting power: #{('%.3f' % vp)} %"
+  else
+    "Remaining voting power: #{('%.3f' % vp)} %"
+  end
+  
+  
+  if @voting_power.size > 1 && @max_voting_power > @voting_rules.min_voting_power
+    vp = @max_voting_power / 100.0
+      
+    summary << "highest account: #{('%.3f' % vp)} %"
+  end
+    
+  vp = @voting_rules.min_voting_power / 100.0
+  summary << "recharging when below: #{('%.3f' % vp)} %"
+  
+  summary.join('; ')
+end
+
+def voters_recharging
+  @voting_power.map do |voter, power|
+    voter if power < @voting_rules.min_voting_power
+  end.compact
+end
 
 def tags_intersection?(json_metadata)
   metadata = JSON[json_metadata || '{}']
@@ -120,7 +180,7 @@ def tags_intersection?(json_metadata)
 end
 
 def may_vote?(comment)
-  return false if !@enable_comments && !comment.parent_author.empty?
+  return false if !@voting_rules.enable_comments && !comment.parent_author.empty?
   return false if @skip_tags.include? comment.parent_permlink
   return false if tags_intersection? comment.json_metadata
   return false if @skip_accounts.include? comment.author
@@ -145,7 +205,6 @@ def min_trending_rep(limit)
   
   @min_trending_rep || 0
 end
-      
 
 def skip?(comment, voters)
   if comment.respond_to? :cashout_time # HF18
@@ -155,7 +214,7 @@ def skip?(comment, voters)
     end
   end
   
-  if !!@only_first_posts
+  if !!@voting_rules.only_first_posts
     begin
       response = @api.get_accounts([comment.author])
       account = response.result.last
@@ -180,9 +239,9 @@ def skip?(comment, voters)
     return true
   end
   
-  unless @favorite_accounts.include? comment.author
-    if @min_rep =~ /dynamic:[0-9]+/
-      limit = @min_rep.split(':').last.to_i
+  unless @voting_rules.favorite_accounts.include? comment.author
+    if @voting_rules.min_rep =~ /dynamic:[0-9]+/
+      limit = @voting_rules.min_rep.split(':').last.to_i
       
       if (rep = comment.author_reputation.to_i) < min_trending_rep(limit)
         # ... rep too low ...
@@ -190,14 +249,14 @@ def skip?(comment, voters)
         return true
       end
     else
-      if (rep = to_rep(comment.author_reputation)) < @min_rep
+      if (rep = to_rep(comment.author_reputation)) < @voting_rules.min_rep
         # ... rep too low ...
         puts "Skipped, due to low rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
         return true
       end
     end
       
-    if (rep = to_rep(comment.author_reputation)) > @max_rep
+    if (rep = to_rep(comment.author_reputation)) > @voting_rules.max_rep
       # ... rep too high ...
       puts "Skipped, due to high rep (#{('%.3f' % rep)}):\n\t@#{comment.author}/#{comment.permlink}"
       return true
@@ -236,10 +295,10 @@ def skip?(comment, voters)
 end
 
 def vote_weight(author)
-  if @favorite_accounts.include? author
-    (@favorites_vote_weight.to_f * 100).to_i
+  if @voting_rules.favorite_accounts.include? author
+    @voting_rules.favorites_vote_weight
   else
-    (@vote_weight.to_f * 100).to_i
+    @voting_rules.vote_weight
   end
 end
 
@@ -260,12 +319,18 @@ def vote(comment, wait_offset = 0)
   
   @threads[slug] = Thread.new do
     response = @api.get_content(comment.author, comment.permlink)
+    
+    if !!response.error
+      puts response.error.message
+      return
+    end
+    
     comment = response.result
     
     voters = if winfrey?
-      @voters.keys - comment.active_votes.map(&:voter)
+      @voters.keys - comment.active_votes.map(&:voter) - voters_recharging
     else
-      @voters.keys
+      @voters.keys - voters_recharging
     end
     
     return if skip?(comment, voters)
@@ -276,7 +341,7 @@ def vote(comment, wait_offset = 0)
       wait_offset = now - timestamp
     end
     
-    if (wait = (Random.rand(*@wait_range) * 60) - wait_offset) > 0
+    if (wait = (Random.rand(*@voting_rules.wait_range) * 60) - wait_offset) > 0
       puts "Waiting #{wait.to_i} seconds to vote for:\n\t#{slug}"
       sleep wait
       
@@ -298,7 +363,20 @@ def vote(comment, wait_offset = 0)
         voter = voters.sample
         weight = vote_weight(author)
         
-        break if weight == 0.0
+        break if weight == 0
+        
+        if (vp = @voting_power[voter].to_i) < @voting_rules.min_voting_power
+          vp = vp / 100.0
+          
+          if @voters.size > 0
+            puts "Recharging #{voter} vote power (currently too low: #{('%.3f' % vp)} %)"
+          else
+            puts "Recharging vote power (currently too low: #{('%.3f' % vp)} %)"
+          end
+          
+          voters -= [voter]
+          next
+        end
                 
         wif = @voters[voter]
         tx = Radiator::Transaction.new(@options.merge(wif: wif))
@@ -361,7 +439,7 @@ def vote(comment, wait_offset = 0)
   end
 end
 
-puts "Current mode: #{@mode}.  Accounts voting: #{@voters.size}"
+puts "Current mode: #{@voting_rules.mode}.  Accounts voting: #{@voters.size}"
 replay = 0
   
 ARGV.each do |arg|
@@ -395,6 +473,7 @@ if replay > 0
       end
     end
     
+    sleep 3
     puts "Done replaying."
   end
 end
@@ -406,9 +485,18 @@ loop do
   @stream = Radiator::Stream.new(@options)
   op_idx = 0
   
+  puts summary_voting_power
+  
   begin
     @stream.operations(:comment) do |comment|
       next unless may_vote? comment
+      
+      if @max_voting_power < @voting_rules.min_voting_power
+        vp = @max_voting_power / 100.0
+        
+        puts "Recharging vote power (currently too low: #{('%.3f' % vp)} %)"
+        next
+      end
       
       vote(comment)
       
