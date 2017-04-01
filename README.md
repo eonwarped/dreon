@@ -4,26 +4,12 @@
 
 #### Fixes
 
-* Fix for nodes that stop responding.
-* Fix for dynamic rep loading more frequently on lower limits.
 
 #### New Features
 
-* Now checking for new HF18 `cashout_time` value (of present).
-  * This will skip voting when authors edit their old archived posts.
-* Now checking `vote_weight: 0.00 %` and skipping without broadcast.
-  * This is useful for special configurations that *only* vote for favorites.
-* Now voting for favorites irregardless of rep.
-* Optionally configure `voters` as a separate filename.  E.g:
-  * `voters: voters.txt`
-    * The format for the file is just: `account wif` (no leading dash, separated by space)
-  * Or continue to use the previous format.
-* Also optional support for separate files in each (format one per line or separated by space or both):
-    * `favorite_accounts`
-    * `skip_accounts`
-    * `skip_tags`
-    * `flag_signals`
-    * `vote_signals`
+* Added `voting_rules`
+  * Moved all other related rules here.
+  * Added `min_voting_power` to create a floor with will allow the voter to recharge over time without having to stop the script.
 
 #### Features
 
@@ -42,6 +28,19 @@
   * `min_rep` can now accept either a static reputation or a dynamic property.
     * Existing static reputation still supported, e.g.: `25.0`
     * Dynamic reputation, e.g.: `dynamic:100`.  This will occasionally query the top 100 trending posts and use the minimum author reputation.
+    * Now checking `vote_weight: 0.00 %` and skipping without broadcast.
+      * This is useful for special configurations that *only* vote for favorites.
+    * Now voting for favorites irregardless of rep.
+    * Optionally configure `voters` as a separate filename.  E.g:
+      * `voters: voters.txt`
+        * The format for the file is just: `account wif` (no leading dash, separated by space)
+      * Or continue to use the previous format.
+    * Also optional support for separate files in each (format one per line or separated by space or both):
+        * `favorite_accounts`
+        * `skip_accounts`
+        * `skip_tags`
+        * `flag_signals`
+        * `vote_signals`
 * Skip posts with declined payout.
 * Skip posts that already have votes from external scripts and posts that were edited.
 * Argument called `replay:` allows a replay of *n* blocks allowing you to catch up to the present.
@@ -50,6 +49,8 @@
   * Counter displayed so you know what kind of impact `^C` will have.
   * This also keeps the number of threads down when authors edit before Dr. Phil votes.
 * Now streaming on Last Irreversible Block Number, just to be fancy.
+* Now checking for new HF18 `cashout_time` value (of present).
+  * This will skip voting when authors edit their old archived posts.
 
 #### Overview
 
