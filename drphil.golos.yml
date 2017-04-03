@@ -24,4 +24,4 @@ vote_signals:
 
 chain_options:
   chain: golos
-  url: https://node.golos.ws
+  url: https://ws.golos.io
