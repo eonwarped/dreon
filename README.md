@@ -1,5 +1,5 @@
 * Title: drphil.rb - Voting Bot
-* Tags: radiator ruby steem howto curation
+* Tags: radiator ruby steem steemdev curation
 * Notes: 
 
 #### Fixes
@@ -128,9 +128,7 @@ If you're still having problems, I suggest starting a new clone.
 ##### Problem: What does this error mean?
 
 ```
-drphil.yml:3: syntax error, unexpected ':', expecting end-of-input
-mode: winfrey
-     ^
+drphil.yml:1: syntax error, unexpected ':', expecting end-of-input
 ```
 
 ##### Solution: You ran `ruby drphil.yml` but you should run `ruby drphil.rb`.

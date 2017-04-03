@@ -115,6 +115,7 @@ if !seinfeld? && @voting_rules.vote_weight == 0 && @voting_rules.favorites_vote_
 end
 
 @threads = {}
+@semaphore = Mutex.new
 
 def to_rep(raw)
   raw = raw.to_i
@@ -128,18 +129,20 @@ def to_rep(raw)
 end
 
 def poll_voting_power
-  response = @api.get_accounts(@voters.keys)
-  accounts = response.result
-  
-  @voting_power = {}
-  
-  accounts.each do |account|
-    @voting_power[account.name] = account.voting_power
+  @semaphore.synchronize do
+    response = @api.get_accounts(@voters.keys)
+    accounts = response.result
+    
+    @voting_power = {}
+    
+    accounts.each do |account|
+      @voting_power[account.name] = account.voting_power
+    end
+    
+    @min_voting_power = accounts.map(&:voting_power).min
+    @max_voting_power = accounts.map(&:voting_power).max
+    @average_voting_power = accounts.map(&:voting_power).inject(:+) / accounts.size
   end
-  
-  @min_voting_power = accounts.map(&:voting_power).min
-  @max_voting_power = accounts.map(&:voting_power).max
-  @average_voting_power = accounts.map(&:voting_power).inject(:+) / accounts.size
 end
 
 def summary_voting_power
@@ -190,14 +193,20 @@ end
 
 def min_trending_rep(limit)
   begin
-    if @min_trending_rep.nil? || Random.rand(0..limit) == 13
-      response = @api.get_discussions_by_trending(tag: '', limit: limit)
-      raise response.error.message if !!response.error
-      
-      trending = response.result
-      @min_trending_rep = trending.map do |c|
-        c.author_reputation.to_i
-      end.min
+    @semaphore.synchronize do
+      if @min_trending_rep.nil? || Random.rand(0..limit) == 13
+        puts "Looking up trending up to #{limit} posts."
+        
+        response = @api.get_discussions_by_trending(tag: '', limit: limit)
+        raise response.error.message if !!response.error
+        
+        trending = response.result
+        @min_trending_rep = trending.map do |c|
+          c.author_reputation.to_i
+        end.min
+        
+        puts "Current minimum dynamic rep: #{@min_trending_rep}"
+      end
     end
   rescue => e
     puts "Warning: #{e}"
@@ -216,12 +225,14 @@ def skip?(comment, voters)
   
   if !!@voting_rules.only_first_posts
     begin
-      response = @api.get_accounts([comment.author])
-      account = response.result.last
-      
-      if account.post_count > 1
-        puts "Skipped, not first post:\n\t@#{comment.author}/#{comment.permlink}"
-        return true
+      @semaphore.synchronize do
+        response = @api.get_accounts([comment.author])
+        account = response.result.last
+        
+        if account.post_count > 1
+          puts "Skipped, not first post:\n\t@#{comment.author}/#{comment.permlink}"
+          return true
+        end
       end
     rescue => e
       puts "Warning: #{e}"
@@ -310,7 +321,9 @@ def vote(comment, wait_offset = 0)
     @threads.delete(k) unless t.alive?
   end
   
-  print "Pending votes: #{@threads.size} ... "
+  @semaphore.synchronize do
+    print "Pending votes: #{@threads.size} ... "
+  end
   
   if @threads.keys.include? slug
     puts "Skipped, vote already pending:\n\t#{slug}"
@@ -363,12 +376,12 @@ def vote(comment, wait_offset = 0)
         voter = voters.sample
         weight = vote_weight(author)
         
-        break if weight == 0
+        break if weight == 0.0
         
         if (vp = @voting_power[voter].to_i) < @voting_rules.min_voting_power
           vp = vp / 100.0
           
-          if @voters.size > 0
+          if @voters.size > 1
             puts "Recharging #{voter} vote power (currently too low: #{('%.3f' % vp)} %)"
           else
             puts "Recharging vote power (currently too low: #{('%.3f' % vp)} %)"
