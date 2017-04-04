@@ -205,7 +205,7 @@ def min_trending_rep(limit)
           c.author_reputation.to_i
         end.min
         
-        puts "Current minimum dynamic rep: #{to_rep @min_trending_rep}"
+        puts "Current minimum dynamic rep: #{('%.3f' % to_rep(@min_trending_rep))}"
       end
     end
   rescue => e
