@@ -1,8 +1,8 @@
 GIT
   remote: https://github.com/inertia186/radiator.git
-  revision: d0c667f505749599ba2d11448ed6fdd01979d5e8
+  revision: 86c13a6fbd5e0eba0afc826abc88792d5e6249ca
   specs:
-    radiator (0.0.9)
+    radiator (0.1.0)
       bitcoin-ruby (= 0.0.10)
       ffi (= 1.9.17)
       hashie (>= 1.1)
@@ -29,4 +29,4 @@ DEPENDENCIES
   radiator!
 
 BUNDLED WITH
-   1.14.3
+   1.14.6
