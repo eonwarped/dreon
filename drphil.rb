@@ -508,6 +508,7 @@ loop do
         vp = @max_voting_power / 100.0
         
         puts "Recharging vote power (currently too low: #{('%.3f' % vp)} %)"
+        break if (op_idx += 1) > MAX_OPS_PER_NODE
         next
       end
       
