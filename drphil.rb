@@ -502,19 +502,19 @@ loop do
   
   begin
     @stream.operations(:comment) do |comment|
-      next unless may_vote? comment
+      unless may_vote? comment
+        break if (op_idx += 1) > MAX_OPS_PER_NODE
+        next
+      end
       
       if @max_voting_power < @voting_rules.min_voting_power
         vp = @max_voting_power / 100.0
         
         puts "Recharging vote power (currently too low: #{('%.3f' % vp)} %)"
-        break if (op_idx += 1) > MAX_OPS_PER_NODE
         next
       end
       
       vote(comment)
-      
-      break if (op_idx += 1) > MAX_OPS_PER_NODE
     end
   rescue => e
     @api.shutdown
