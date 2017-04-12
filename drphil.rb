@@ -498,9 +498,9 @@ loop do
   @stream = Radiator::Stream.new(@options)
   op_idx = 0
   
-  puts summary_voting_power
-  
   begin
+    puts summary_voting_power
+    
     @stream.operations(:comment) do |comment|
       unless may_vote? comment
         break if (op_idx += 1) > MAX_OPS_PER_NODE
