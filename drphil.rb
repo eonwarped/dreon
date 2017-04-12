@@ -7,6 +7,7 @@
 require 'rubygems'
 require 'bundler/setup'
 require 'yaml'
+require 'pry'
 
 Bundler.require
 
@@ -175,6 +176,29 @@ def voters_recharging
   end.compact
 end
 
+def voters_check_charging
+  @semaphore.synchronize do
+    return [] if (Time.now.utc.to_i - @voters_check_charging_at.to_i) < 300
+    
+    @voters_check_charging_at = Time.now.utc
+    
+    @voting_power.map do |voter, power|
+      if power < @voting_rules.min_voting_power
+        check_time = 4320 # TODO Make this dynamic based on effective voting power
+        response = @api.get_account_votes(voter)
+        votes = response.result
+        latest_vote_at = if votes.any? && !!(time = votes.last.time)
+          Time.parse(time + 'Z')
+        end
+        
+        elapsed = Time.now.utc.to_i - latest_vote_at.to_i
+        
+        voter if elapsed > check_time
+      end
+    end.compact
+  end
+end
+
 def tags_intersection?(json_metadata)
   metadata = JSON[json_metadata || '{}']
   tags = metadata['tags'] || [] rescue []
@@ -322,7 +346,10 @@ def vote(comment, wait_offset = 0)
   end
   
   @semaphore.synchronize do
-    print "Pending votes: #{@threads.size} ... "
+    if @threads.size != @last_threads_size
+      print "Pending votes: #{@threads.size} ... "
+      @last_threads_size = @threads.size
+    end
   end
   
   if @threads.keys.include? slug
@@ -339,12 +366,13 @@ def vote(comment, wait_offset = 0)
     end
     
     comment = response.result
+    check_charging = voters_check_charging
     
     voters = if winfrey?
-      @voters.keys - comment.active_votes.map(&:voter) - voters_recharging
+      @voters.keys - comment.active_votes.map(&:voter)
     else
-      @voters.keys - voters_recharging
-    end
+      @voters.keys
+    end - voters_recharging + check_charging
     
     return if skip?(comment, voters)
     
@@ -387,8 +415,10 @@ def vote(comment, wait_offset = 0)
             puts "Recharging vote power (currently too low: #{('%.3f' % vp)} %)"
           end
           
-          voters -= [voter]
-          next
+          unless check_charging.include? voter
+            voters -= [voter]
+            next
+          end
         end
                 
         wif = @voters[voter]
@@ -511,7 +541,6 @@ loop do
         vp = @max_voting_power / 100.0
         
         puts "Recharging vote power (currently too low: #{('%.3f' % vp)} %)"
-        next
       end
       
       vote(comment)

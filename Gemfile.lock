@@ -13,19 +13,27 @@ GEM
   remote: https://rubygems.org/
   specs:
     bitcoin-ruby (0.0.10)
+    coderay (1.1.1)
     ffi (1.9.17)
     hashie (3.5.5)
     little-plugger (1.1.4)
     logging (2.1.0)
       little-plugger (~> 1.1)
       multi_json (~> 1.10)
+    method_source (0.8.2)
     multi_json (1.12.1)
     net-http-persistent (2.9.4)
+    pry (0.10.4)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
+      slop (~> 3.4)
+    slop (3.6.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  pry
   radiator!
 
 BUNDLED WITH
