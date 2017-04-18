@@ -14,9 +14,6 @@ Bundler.require
 # If there are problems, this is the most time we'll wait (in seconds).
 MAX_BACKOFF = 12.8
 
-# We read this number of comment ops before we try a new node.
-MAX_OPS_PER_NODE = 10
-
 @config_path = __FILE__.sub(/\.rb$/, '.yml')
 
 unless File.exist? @config_path
@@ -532,10 +529,7 @@ loop do
     puts summary_voting_power
     
     @stream.operations(:comment) do |comment|
-      unless may_vote? comment
-        break if (op_idx += 1) > MAX_OPS_PER_NODE
-        next
-      end
+      next unless may_vote? comment
       
       if @max_voting_power < @voting_rules.min_voting_power
         vp = @max_voting_power / 100.0
