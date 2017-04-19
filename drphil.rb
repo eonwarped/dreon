@@ -7,14 +7,12 @@
 require 'rubygems'
 require 'bundler/setup'
 require 'yaml'
+require 'pry'
 
 Bundler.require
 
 # If there are problems, this is the most time we'll wait (in seconds).
 MAX_BACKOFF = 12.8
-
-# We read this number of comment ops before we try a new node.
-MAX_OPS_PER_NODE = 10
 
 @config_path = __FILE__.sub(/\.rb$/, '.yml')
 
@@ -75,6 +73,8 @@ rules = @config['voting_rules']
   mode: rules['mode'] || 'drphil',
   vote_weight: (((rules['vote_weight'] || '100.0 %').to_f) * 100).to_i,
   favorites_vote_weight: (((rules['favorites_vote_weight'] || '100.0 %').to_f) * 100).to_i,
+  following_vote_weight: (((rules['following_vote_weight'] || '100.0 %').to_f) * 100).to_i,
+  followers_vote_weight: (((rules['followers_vote_weight'] || '100.0 %').to_f) * 100).to_i,
   enable_comments: rules['enable_comments'],
   only_first_posts: rules['only_first_posts'],
   min_wait: rules['min_wait'].to_i,
@@ -109,8 +109,12 @@ def winfrey?; @voting_rules.mode == 'winfrey'; end
 def drphil?; @voting_rules.mode == 'drphil'; end
 def seinfeld?; @voting_rules.mode == 'seinfeld'; end
 
-if !seinfeld? && @voting_rules.vote_weight == 0 && @voting_rules.favorites_vote_weight == 0
-  puts "WARNING: Both vote_weight and favorites_vote_weight are zero.  This is a bot that does nothing."
+if (
+    !seinfeld? &&
+    @voting_rules.vote_weight == 0 && @voting_rules.favorites_vote_weight == 0 &&
+    @voting_rules.following_vote_weight == 0 && @voting_rules.followers_vote_weight == 0
+  )
+  puts "WARNING: All vote weights are zero.  This is a bot that does nothing."
   @voting_rules.mode = 'seinfeld'
 end
 
@@ -156,7 +160,6 @@ def summary_voting_power
     "Remaining voting power: #{('%.3f' % vp)} %"
   end
   
-  
   if @voting_power.size > 1 && @max_voting_power > @voting_rules.min_voting_power
     vp = @max_voting_power / 100.0
       
@@ -173,6 +176,29 @@ def voters_recharging
   @voting_power.map do |voter, power|
     voter if power < @voting_rules.min_voting_power
   end.compact
+end
+
+def voters_check_charging
+  @semaphore.synchronize do
+    return [] if (Time.now.utc.to_i - @voters_check_charging_at.to_i) < 300
+    
+    @voters_check_charging_at = Time.now.utc
+    
+    @voting_power.map do |voter, power|
+      if power < @voting_rules.min_voting_power
+        check_time = 4320 # TODO Make this dynamic based on effective voting power
+        response = @api.get_account_votes(voter)
+        votes = response.result
+        latest_vote_at = if votes.any? && !!(time = votes.last.time)
+          Time.parse(time + 'Z')
+        end
+        
+        elapsed = Time.now.utc.to_i - latest_vote_at.to_i
+        
+        voter if elapsed > check_time
+      end
+    end.compact
+  end
 end
 
 def tags_intersection?(json_metadata)
@@ -305,11 +331,59 @@ def skip?(comment, voters)
   false
 end
 
-def vote_weight(author)
-  if @favorite_accounts.include? author
-    @voting_rules.favorites_vote_weight
-  else
-    @voting_rules.vote_weight
+def following?(voter, author)
+  @voters_following ||= {}
+  following = @voters_following[voter] || []
+  count = -1
+  
+  if following.empty?
+    until count == following.size
+      count = following.size
+      response = @follow_api.get_following(voter, following.last, 'blog', 100)
+      following += response.result.map(&:following)
+      following = following.uniq
+    end
+    
+    @voters_following[voter] = following
+  end
+  
+  @voters_following[voter] = nil if Random.rand(0..999) == 13
+  
+  following.include? author
+end
+
+def follower?(voter, author)
+  @voters_followers ||= {}
+  followers = @voters_followers[voter] || []
+  count = -1
+
+  if followers.empty?
+    until count == followers.size
+      count = followers.size
+      response = @follow_api.get_followers(voter, followers.last, 'blog', 100)
+      followers += response.result.map(&:follower)
+      followers = followers.uniq
+    end
+    
+    @voters_followers[voter] = nil if Random.rand(0..999) == 13
+  
+    @voters_followers[voter] = followers
+  end
+  
+  followers.include? author
+end
+
+def vote_weight(author, voter)
+  @semaphore.synchronize do
+    if @favorite_accounts.include? author
+      @voting_rules.favorites_vote_weight
+    elsif following? voter, author
+      @voting_rules.following_vote_weight
+    elsif follower? voter, author
+      @voting_rules.followers_vote_weight
+    else
+      @voting_rules.vote_weight
+    end
   end
 end
 
@@ -322,7 +396,10 @@ def vote(comment, wait_offset = 0)
   end
   
   @semaphore.synchronize do
-    print "Pending votes: #{@threads.size} ... "
+    if @threads.size != @last_threads_size
+      print "Pending votes: #{@threads.size} ... "
+      @last_threads_size = @threads.size
+    end
   end
   
   if @threads.keys.include? slug
@@ -339,12 +416,13 @@ def vote(comment, wait_offset = 0)
     end
     
     comment = response.result
+    check_charging = voters_check_charging
     
     voters = if winfrey?
       @voters.keys - comment.active_votes.map(&:voter) - voters_recharging
     else
-      @voters.keys - voters_recharging
-    end
+      @voters.keys
+    end - voters_recharging + check_charging
     
     return if skip?(comment, voters)
     
@@ -374,7 +452,7 @@ def vote(comment, wait_offset = 0)
         author = comment.author
         permlink = comment.permlink
         voter = voters.sample
-        weight = vote_weight(author)
+        weight = vote_weight(author, voter)
         
         break if weight == 0.0
         
@@ -387,12 +465,14 @@ def vote(comment, wait_offset = 0)
             puts "Recharging vote power (currently too low: #{('%.3f' % vp)} %)"
           end
           
-          voters -= [voter]
-          next
+          unless check_charging.include? voter
+            voters -= [voter]
+            next
+          end
         end
                 
         wif = @voters[voter]
-        tx = Radiator::Transaction.new(@options.merge(wif: wif))
+        tx = Radiator::Transaction.new(@options.dup.merge(wif: wif))
         
         puts "#{voter} voting for #{slug}"
         
@@ -463,8 +543,9 @@ end
 
 if replay > 0
   Thread.new do
-    @api = Radiator::Api.new(@options)
-    @stream = Radiator::Stream.new(@options)
+    @api = Radiator::Api.new(@options.dup)
+    @follow_api = Radiator::FollowApi.new(@options.dup)
+    @stream = Radiator::Stream.new(@options.dup)
     
     properties = @api.get_dynamic_global_properties.result
     last_irreversible_block_num = properties.last_irreversible_block_num
@@ -494,24 +575,21 @@ end
 puts "Now waiting for new posts."
 
 loop do
-  @api = Radiator::Api.new(@options)
-  @stream = Radiator::Stream.new(@options)
+  @api = Radiator::Api.new(@options.dup)
+  @follow_api = Radiator::FollowApi.new(@options.dup)
+  @stream = Radiator::Stream.new(@options.dup)
   op_idx = 0
   
-  puts summary_voting_power
-  
   begin
+    puts summary_voting_power
+    
     @stream.operations(:comment) do |comment|
-      unless may_vote? comment
-        break if (op_idx += 1) > MAX_OPS_PER_NODE
-        next
-      end
+      next unless may_vote? comment
       
       if @max_voting_power < @voting_rules.min_voting_power
         vp = @max_voting_power / 100.0
         
         puts "Recharging vote power (currently too low: #{('%.3f' % vp)} %)"
-        next
       end
       
       vote(comment)

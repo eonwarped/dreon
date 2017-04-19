@@ -4,33 +4,38 @@
 
 #### Fixes
 
+* Added "check recharge" subroutine, which will cast a vote at least once every two hours so that nodes will recalculate each account's current voting power.
+* Maximum operations to switch nodes now won't skip votes.
+* Better recovery logic for SSL errors.
 
 #### New Features
 
-* Added `voting_rules`
-  * Moved all other related rules here.
-  * Added `min_voting_power` to create a floor with will allow the voter to recharge over time without having to stop the script.
+* Added two new voting weights in `voting_rules`:
+  * `following_vote_weight` - for accounts that the voter follows
+  * `followers_vote_weight` - for accounts that follow the voter
 
 #### Features
 
 * YAML config.
-  * `winfrey` mode that acts like the winfrey bot, all voters vote for everyone
-  * `drphil` mode one random voter votes for everyone (default)
-  * `min_rep` (default `25.0`)
-  * `min_wait` and `max_wait` so that you can fine-tune voting delay.
-  * `favorite_accounts` list and separate `favorites_vote_weight` option.
-  * `enable_comments` option to vote for post replies (default false).
-  * `only_first_posts` option to only vote on an author's first post (default false).
-  * `max_rep` option, useful for limiting votes to newer authors (default 99.9).
-  * `vote_signals` account list.
-    * Optionally allows multiple bot instances to cooperate by avoiding vote swarms.
-    * If enabled, this feature allows cooperation without sharing keys (in `drphil` mode).
-  * `min_rep` can now accept either a static reputation or a dynamic property.
-    * Existing static reputation still supported, e.g.: `25.0`
-    * Dynamic reputation, e.g.: `dynamic:100`.  This will occasionally query the top 100 trending posts and use the minimum author reputation.
-    * Now checking `vote_weight: 0.00 %` and skipping without broadcast.
-      * This is useful for special configurations that *only* vote for favorites.
-    * Now voting for favorites irregardless of rep.
+  * `voting_rules`
+    * `winfrey` mode that acts like the winfrey bot, all voters vote for everyone
+    * `drphil` mode one random voter votes for everyone (default)
+    * `min_rep` (default `25.0`)
+    * `min_wait` and `max_wait` so that you can fine-tune voting delay.
+    * `favorite_accounts` list and separate `favorites_vote_weight` option.
+      * Note: votes will be cast for favorites irregardless of rep.
+    * `enable_comments` option to vote for post replies (default false).
+    * `only_first_posts` option to only vote on an author's first post (default false).
+    * `max_rep` option, useful for limiting votes to newer authors (default 99.9).
+    * `vote_signals` account list.
+      * Optionally allows multiple bot instances to cooperate by avoiding vote swarms.
+      * If enabled, this feature allows cooperation without sharing keys (in `drphil` mode).
+    * `min_rep` can now accept either a static reputation or a dynamic property.
+      * Existing static reputation still supported, e.g.: `25.0`
+      * Dynamic reputation, e.g.: `dynamic:100`.  This will occasionally query the top 100 trending posts and use the minimum author reputation.
+      * Now checking `vote_weight: 0.00 %` and skipping without broadcast.
+        * This is useful for special configurations that *only* vote for favorites.
+      * `min_voting_power` to create a floor with will allow the voter to recharge over time without having to stop the script.
     * Optionally configure `voters` as a separate filename.  E.g:
       * `voters: voters.txt`
         * The format for the file is just: `account wif` (no leading dash, separated by space)
@@ -49,7 +54,7 @@
   * Counter displayed so you know what kind of impact `^C` will have.
   * This also keeps the number of threads down when authors edit before Dr. Phil votes.
 * Now streaming on Last Irreversible Block Number, just to be fancy.
-* Now checking for new HF18 `cashout_time` value (of present).
+* Now checking for new HF18 `cashout_time` value (if present).
   * This will skip voting when authors edit their old archived posts.
 
 #### Overview

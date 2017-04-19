@@ -1,8 +1,8 @@
 GIT
   remote: https://github.com/inertia186/radiator.git
-  revision: 65f0aeff610023511683afdcfa2dd14a3328b7f6
+  revision: d435889799b61d0cf01190b655699bba4eee659c
   specs:
-    radiator (0.1.1)
+    radiator (0.1.2)
       bitcoin-ruby (= 0.0.10)
       ffi (= 1.9.17)
       hashie (>= 1.1)
@@ -13,19 +13,27 @@ GEM
   remote: https://rubygems.org/
   specs:
     bitcoin-ruby (0.0.10)
+    coderay (1.1.1)
     ffi (1.9.17)
     hashie (3.5.5)
     little-plugger (1.1.4)
-    logging (2.2.0)
+    logging (2.2.2)
       little-plugger (~> 1.1)
       multi_json (~> 1.10)
+    method_source (0.8.2)
     multi_json (1.12.1)
     net-http-persistent (2.9.4)
+    pry (0.10.4)
+      coderay (~> 1.1.0)
+      method_source (~> 0.8.1)
+      slop (~> 3.4)
+    slop (3.6.0)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
+  pry
   radiator!
 
 BUNDLED WITH
