@@ -77,6 +77,7 @@ rules = @config['voting_rules']
   followers_vote_weight: (((rules['followers_vote_weight'] || '100.0 %').to_f) * 100).to_i,
   enable_comments: rules['enable_comments'],
   only_first_posts: rules['only_first_posts'],
+  only_fully_powered_up: rules['only_fully_powered_up'],
   min_wait: rules['min_wait'].to_i,
   max_wait: rules['max_wait'].to_i,
   min_rep: (rules['min_rep'] || 25.0),
@@ -263,6 +264,13 @@ def skip?(comment, voters)
       end
     rescue => e
       puts "Warning: #{e}"
+      return true
+    end
+  end
+  
+  if !!@voting_rules.only_fully_powered_up
+    unless comment.percent_steem_dollars == 0
+      puts "Skipped, reward not fully powered up:\n\t@#{comment.author}/#{comment.permlink}"
       return true
     end
   end

@@ -8,6 +8,7 @@ voting_rules:
   followers_vote_weight: 100.00 %
   enable_comments: false
   only_first_posts: false
+  only_fully_powered_up: false
   min_wait: 18
   max_wait: 30
   min_rep: 25.0
