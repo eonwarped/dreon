@@ -2,17 +2,9 @@
 * Tags: radiator ruby steem steemdev curation
 * Notes: 
 
-#### Fixes
-
-* Added "check recharge" subroutine, which will cast a vote at least once every two hours so that nodes will recalculate each account's current voting power.
-* Maximum operations to switch nodes now won't skip votes.
-* Better recovery logic for SSL errors.
-
 #### New Features
 
-* Added two new voting weights in `voting_rules`:
-  * `following_vote_weight` - for accounts that the voter follows
-  * `followers_vote_weight` - for accounts that follow the voter
+* Added `only_fully_powered_up` which will only vote for posts that receive 100% STEEM Power author rewards.
 
 #### Features
 
@@ -20,6 +12,8 @@
   * `voting_rules`
     * `winfrey` mode that acts like the winfrey bot, all voters vote for everyone
     * `drphil` mode one random voter votes for everyone (default)
+    * `following_vote_weight` - for accounts that the voter follows
+    * `followers_vote_weight` - for accounts that follow the voter
     * `min_rep` (default `25.0`)
     * `min_wait` and `max_wait` so that you can fine-tune voting delay.
     * `favorite_accounts` list and separate `favorites_vote_weight` option.
