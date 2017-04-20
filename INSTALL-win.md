@@ -10,7 +10,7 @@ For these steps, we will install the `cygwin` package manager, which will provid
 
 https://cygwin.com/
 
-We need `cygwin` to install `git`, `ruby-dev`, `gem`, and 'make' for us.  Run its setup and take all of the defaults, clicking `Next` until you reach the `Select Packages` dialog.  Select the `View` option of `Full`.  Search for:
+We need `cygwin` to install `git`, `ruby-dev`, `gem`, and `make` for us.  Run its setup and take all of the defaults, clicking `Next` until you reach the `Select Packages` dialog.  Select the `View` option of `Full`.  Search for:
 
 * `git` and find the package named: `git: Distributed version control`.  Change `Skip` to `2.12.2-1` (or later).
 * `ruby-dev` and find the package named: `ruby-devel: Interpreted object-oriented scripting language`.  Change `Skip` to `2.3.3-1` (or later).

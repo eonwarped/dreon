@@ -153,7 +153,7 @@ Make sure the `.yml` file `voter` items have the account name, followed by a spa
 ---
 
 <center>
-  ![](http://i.imgur.com/qUZYLiQ.png)
+  <img src="http://i.imgur.com/qUZYLiQ.png" />
 </center>
 
 See my previous Ruby How To posts in: [#radiator](https://steemit.com/created/radiator) [#ruby](https://steemit.com/created/ruby)
