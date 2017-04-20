@@ -21,7 +21,7 @@
     * `winfrey` mode that acts like the winfrey bot, all voters vote for everyone
     * `drphil` mode one random voter votes for everyone (default)
     * `min_rep` (default `25.0`)
-    * `min_wait` and `max_wait` so that you can fine-tune voting delay.
+    * `min_wait` and `max_wait` (in minutes) so that you can fine-tune voting delay.
     * `favorite_accounts` list and separate `favorites_vote_weight` option.
       * Note: votes will be cast for favorites irregardless of rep.
     * `enable_comments` option to vote for post replies (default false).
