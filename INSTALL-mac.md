@@ -9,7 +9,7 @@
 Before you can use `drphil`, you will need to install `bundler`.  If you are using the system version of `ruby`, you need to use `sudo` to install `bundler`:
 
 ```bash
-sudo gem install bundler
+$ sudo gem install bundler
 ```
 
 On modern versions of macOS, attempting to use `git` will prompt its installation, which is a neat feature.  Just type `git` in the terminal and hit enter.  You'll get this dialog:
