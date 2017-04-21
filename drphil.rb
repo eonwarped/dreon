@@ -593,6 +593,7 @@ loop do
       end
       
       vote(comment)
+      puts summary_voting_power
     end
   rescue => e
     @api.shutdown
