@@ -1,6 +1,6 @@
 GIT
   remote: https://github.com/inertia186/radiator.git
-  revision: bac28b4dc94068e1582a049081db4b6079e86719
+  revision: d435889799b61d0cf01190b655699bba4eee659c
   specs:
     radiator (0.1.2)
       bitcoin-ruby (= 0.0.10)

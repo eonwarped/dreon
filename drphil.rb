@@ -161,7 +161,6 @@ def summary_voting_power
     "Remaining voting power: #{('%.3f' % vp)} %"
   end
   
-  
   if @voting_power.size > 1 && @max_voting_power > @voting_rules.min_voting_power
     vp = @max_voting_power / 100.0
       
@@ -428,7 +427,7 @@ def vote(comment, wait_offset = 0)
     check_charging = voters_check_charging
     
     voters = if winfrey?
-      @voters.keys - comment.active_votes.map(&:voter)
+      @voters.keys - comment.active_votes.map(&:voter) - voters_recharging
     else
       @voters.keys
     end - voters_recharging + check_charging
@@ -602,6 +601,7 @@ loop do
       end
       
       vote(comment)
+      puts summary_voting_power
     end
   rescue => e
     @api.shutdown

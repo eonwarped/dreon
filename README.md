@@ -15,7 +15,7 @@
     * `following_vote_weight` - for accounts that the voter follows
     * `followers_vote_weight` - for accounts that follow the voter
     * `min_rep` (default `25.0`)
-    * `min_wait` and `max_wait` so that you can fine-tune voting delay.
+    * `min_wait` and `max_wait` (in minutes) so that you can fine-tune voting delay.
     * `favorite_accounts` list and separate `favorites_vote_weight` option.
       * Note: votes will be cast for favorites irregardless of rep.
     * `enable_comments` option to vote for post replies (default false).
@@ -147,7 +147,7 @@ Make sure the `.yml` file `voter` items have the account name, followed by a spa
 ---
 
 <center>
-  ![](http://i.imgur.com/qUZYLiQ.png)
+  <img src="http://i.imgur.com/qUZYLiQ.png" />
 </center>
 
 See my previous Ruby How To posts in: [#radiator](https://steemit.com/created/radiator) [#ruby](https://steemit.com/created/ruby)
