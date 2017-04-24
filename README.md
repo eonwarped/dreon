@@ -144,6 +144,14 @@ Unable to vote with <account>.  Invalid version
 
 Make sure the `.yml` file `voter` items have the account name, followed by a space, followed by the account's WIF posting key.  Also make sure you have removed the example accounts (`social` and `bad.account` are just for testing).
 
+##### Problem: The node I'm using is down.
+
+Is there a list of nodes?
+
+##### Solution: Yes, special thanks to @ripplerm.
+
+https://ripplerm.github.io/steem-servers/
+
 ---
 
 <center>

@@ -38,3 +38,9 @@ $ ruby drphil.rb
 To configure `drphil`, you will need to modify the `drphil.yml` which will be located in:
 
 `C:\cygwin\home\<username>\drphil`
+
+---
+
+If you're using Windows XP, official `cygwin` support has been dropped.  There is an unofficial project here:
+
+http://www.crouchingtigerhiddenfruitbat.org/Cygwin/timemachine.html
