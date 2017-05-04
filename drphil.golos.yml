@@ -8,11 +8,14 @@ voting_rules:
   followers_vote_weight: 100.00 %
   enable_comments: false
   only_first_posts: false
+  only_fully_powered_up: false
   min_wait: 18
   max_wait: 30
   min_rep: 25.0
   max_rep: 99.9
   min_voting_power: 25.00 %
+  # unique_author: 1440
+  # max_votes_per_post: 10
   
 voters:
   - social 5JrvPrQeBBvCRdjv29iDvkwn3EQYZ9jqfAHzrCyUvfbEbRkrYFC

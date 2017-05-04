@@ -4,7 +4,8 @@
 
 #### New Features
 
-* Added `only_fully_powered_up` which will only vote for posts that receive 100% STEEM Power author rewards.
+* Added 'unique_author' (optional) which takes an integer in minutes.  This will limit voting to 1 vote per period.  E.g.: Set it to 1440 to only vote for each author once a day.
+* Added 'max_votes_per_post' (optional) which only votes *n* times per post (`winfrey` mode only).
 
 #### Features
 
@@ -40,6 +41,7 @@
         * `skip_tags`
         * `flag_signals`
         * `vote_signals`
+    * `only_fully_powered_up` which will only vote for posts that receive 100% STEEM Power author rewards.
 * Skip posts with declined payout.
 * Skip posts that already have votes from external scripts and posts that were edited.
 * Argument called `replay:` allows a replay of *n* blocks allowing you to catch up to the present.

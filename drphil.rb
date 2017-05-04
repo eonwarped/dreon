@@ -82,7 +82,9 @@ rules = @config['voting_rules']
   max_wait: rules['max_wait'].to_i,
   min_rep: (rules['min_rep'] || 25.0),
   max_rep: (rules['max_rep'] || 99.9).to_f,
-  min_voting_power: (((rules['min_voting_power'] || '0.0 %').to_f) * 100).to_i
+  min_voting_power: (((rules['min_voting_power'] || '0.0 %').to_f) * 100).to_i,
+  unique_author: rules['unique_author'],
+  max_votes_per_post: rules['max_votes_per_post'],
 }
 
 @voting_rules[:wait_range] = [@voting_rules[:min_wait]..@voting_rules[:max_wait]]
@@ -119,6 +121,8 @@ if (
   @voting_rules.mode = 'seinfeld'
 end
 
+@voted_for_authors = {}
+@voting_power = {}
 @threads = {}
 @semaphore = Mutex.new
 
@@ -137,8 +141,6 @@ def poll_voting_power
   @semaphore.synchronize do
     response = @api.get_accounts(@voters.keys)
     accounts = response.result
-    
-    @voting_power = {}
     
     accounts.each do |account|
       @voting_power[account.name] = account.voting_power
@@ -207,6 +209,18 @@ def tags_intersection?(json_metadata)
   tags = metadata['tags'] || [] rescue []
   
   (@skip_tags & tags).any?
+end
+
+def already_voted_for?(author)
+  return false if @voting_rules.unique_author.nil?
+  
+  @voted_for_authors.each do |author, vote_at|
+    Time.now.utc - vote_at < @voting_rules.unique_author or @voted_for_authors[author] = nil
+  end
+  
+  return true if @voted_for_authors.keys.include? author
+  
+  false
 end
 
 def may_vote?(comment)
@@ -336,6 +350,12 @@ def skip?(comment, voters)
     return true
   end
   
+  if already_voted_for?(comment.author)
+    # ... Already voted in timeframe ...
+    puts "Skipped, already voted for @#{comment.author} within #{@voting_rules.unique_author} minutes"
+    return true
+  end
+  
   false
 end
 
@@ -396,6 +416,7 @@ def vote_weight(author, voter)
 end
 
 def vote(comment, wait_offset = 0)
+  votes_cast = 0
   backoff = 0.2
   slug = "@#{comment.author}/#{comment.permlink}"
   
@@ -516,19 +537,34 @@ def vote(comment, wait_offset = 0)
             puts "\tFailed: voting weight too small"
             voters -= [voter]
             next
+          elsif message.to_s =~ /STEEMIT_UPVOTE_LOCKOUT_HF17/
+            puts "\tFailed: upvote lockout (last twelve hours before payout)"
+            break
+          elsif message.to_s =~ /signature is not canonical/
+            puts "\tRetrying: signature was not canonical (bug in Radiator?)"
+            redo
           end
           raise message
         end
         
         puts "\tSuccess: #{response.result.to_json}"
+        @voted_for_authors[author] = Time.now.utc
+        votes_cast += 1
         
         if winfrey?
-          # The winfrey mode keeps voting until there are no more voters.
-          voters -= [voter]
-          next
+          # The winfrey mode keeps voting until there are no more voters of
+          # until max_votes_per_post is reached (if set)
+          
+          if @voting_rules.max_votes_per_post.nil? || votes_cast < @voting_rules.max_votes_per_post
+            voters -= [voter]
+            next
+          else
+            puts "Max votes per post reached."
+            break
+          end
         end
         
-        # The drphil mode only votes with one key.
+        # The drphil mode only votes with one key per post.
         break
       rescue => e
         puts "Pausing #{backoff} :: Unable to vote with #{voter}.  #{e}"
