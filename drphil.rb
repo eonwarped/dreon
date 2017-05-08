@@ -102,7 +102,19 @@ end
 @only_tags = parse_list(@config['only_tags'])
 @flag_signals = parse_list(@config['flag_signals'])
 @vote_signals = parse_list(@config['vote_signals'])
+
+@favorite_account_weights = @favorite_accounts.map do |account|
+  pair = account.split(':')
+  next unless pair.size == 2
   
+  pair[1] = (pair[1].to_f * 100).to_i
+  pair
+end.compact.to_h
+
+@favorite_accounts = @favorite_accounts.map do |account|
+  account.split(':').first
+end
+
 @options = {
   chain: @config['chain_options']['chain'].to_sym,
   url: @config['chain_options']['url'],
@@ -415,7 +427,11 @@ end
 def vote_weight(author, voter)
   @semaphore.synchronize do
     if @favorite_accounts.include? author
-      @voting_rules.favorites_vote_weight
+      if @favorite_account_weights.keys.include? author
+        @favorite_account_weights[author]
+      else
+        @voting_rules.favorites_vote_weight
+      end
     elsif following? voter, author
       @voting_rules.following_vote_weight
     elsif follower? voter, author
