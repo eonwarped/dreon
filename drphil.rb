@@ -72,9 +72,9 @@ rules = @config['voting_rules']
 @voting_rules = {
   mode: rules['mode'] || 'drphil',
   vote_weight: (((rules['vote_weight'] || '100.0 %').to_f) * 100).to_i,
-  favorites_vote_weight: (((rules['favorites_vote_weight'] || '100.0 %').to_f) * 100).to_i,
-  following_vote_weight: (((rules['following_vote_weight'] || '100.0 %').to_f) * 100).to_i,
-  followers_vote_weight: (((rules['followers_vote_weight'] || '100.0 %').to_f) * 100).to_i,
+  favorites_vote_weight: (((rules['favorites_vote_weight'] || rules['vote_weight'] || '100.0 %').to_f) * 100).to_i,
+  following_vote_weight: (((rules['following_vote_weight'] || rules['vote_weight'] || '100.0 %').to_f) * 100).to_i,
+  followers_vote_weight: (((rules['followers_vote_weight'] || rules['vote_weight'] || '100.0 %').to_f) * 100).to_i,
   enable_comments: rules['enable_comments'],
   only_first_posts: rules['only_first_posts'],
   only_fully_powered_up: rules['only_fully_powered_up'],
