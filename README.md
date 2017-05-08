@@ -4,8 +4,12 @@
 
 #### New Features
 
-* Added 'unique_author' (optional) which takes an integer in minutes.  This will limit voting to 1 vote per period.  E.g.: Set it to 1440 to only vote for each author once a day.
-* Added 'max_votes_per_post' (optional) which only votes *n* times per post (`winfrey` mode only).
+* Added `unique_author` (optional) which takes an integer in minutes.  This will limit voting to 1 vote per period.  E.g.: Set it to 1440 to only vote for each author once a day.
+* Added `max_votes_per_post` (optional) which only votes *n* times per post (`winfrey` mode only).
+* Added `only_tags` (optional) which only votes on posts that include these tags.
+* Alternative voting weights all inherit from `vote_weight` if not present.
+* Favorites (`favorite_accounts`) can now have individual vote percent.
+  * Formatted as: account:weight (e.g.: `inertia:100.00`)
 
 #### Features
 
