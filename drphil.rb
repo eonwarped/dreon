@@ -99,6 +99,7 @@ end
 @favorite_accounts = parse_list(@config['favorite_accounts'])
 @skip_accounts = parse_list(@config['skip_accounts'])
 @skip_tags = parse_list(@config['skip_tags'])
+@only_tags = parse_list(@config['only_tags'])
 @flag_signals = parse_list(@config['flag_signals'])
 @vote_signals = parse_list(@config['vote_signals'])
   
@@ -204,11 +205,20 @@ def voters_check_charging
   end
 end
 
-def tags_intersection?(json_metadata)
+def skip_tags_intersection?(json_metadata)
   metadata = JSON[json_metadata || '{}']
   tags = metadata['tags'] || [] rescue []
   
   (@skip_tags & tags).any?
+end
+
+def only_tags_intersection?(json_metadata)
+  return true if @only_tags.none? # not set, assume all tags intersect
+  
+  metadata = JSON[json_metadata || '{}']
+  tags = metadata['tags'] || [] rescue []
+  
+  (@only_tags & tags).any?
 end
 
 def already_voted_for?(author)
@@ -226,7 +236,8 @@ end
 def may_vote?(comment)
   return false if !@voting_rules.enable_comments && !comment.parent_author.empty?
   return false if @skip_tags.include? comment.parent_permlink
-  return false if tags_intersection? comment.json_metadata
+  return false if skip_tags_intersection? comment.json_metadata
+  return false unless only_tags_intersection? comment.json_metadata
   return false if @skip_accounts.include? comment.author
   
   true

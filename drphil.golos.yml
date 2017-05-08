@@ -24,6 +24,7 @@ voters:
 favorite_accounts: inertia banjo
 skip_accounts: leeroy.jenkins the.masses danlarimer ned-reddit-login
 skip_tags: nsfw test ru--mat bm-open
+# only_tags: golos
 flag_signals: cheetah kulturagolosa
 vote_signals: 
 
