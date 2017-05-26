@@ -222,6 +222,7 @@ end
 def skip_tags_intersection?(json_metadata)
   metadata = JSON[json_metadata || '{}']
   tags = metadata['tags'] || [] rescue []
+  tags = [tags].flatten
   
   (@skip_tags & tags).any?
 end
@@ -231,6 +232,7 @@ def only_tags_intersection?(json_metadata)
   
   metadata = JSON[json_metadata || '{}']
   tags = metadata['tags'] || [] rescue []
+  tags = [tags].flatten
   
   (@only_tags & tags).any?
 end
