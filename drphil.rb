@@ -100,6 +100,8 @@ end
 @skip_accounts = parse_list(@config['skip_accounts'])
 @skip_tags = parse_list(@config['skip_tags'])
 @only_tags = parse_list(@config['only_tags'])
+@skip_apps = parse_list(@config['skip_apps'])
+@only_apps = parse_list(@config['only_apps'])
 @flag_signals = parse_list(@config['flag_signals'])
 @vote_signals = parse_list(@config['vote_signals'])
 
@@ -233,6 +235,22 @@ def only_tags_intersection?(json_metadata)
   (@only_tags & tags).any?
 end
 
+def skip_app?(json_metadata)
+  metadata = JSON[json_metadata || '{}']
+  app = metadata['app'].to_s.split('/').first
+  
+  @skip_apps.include? app
+end
+
+def only_app?(json_metadata)
+  return true if @only_apps.none?
+  
+  metadata = JSON[json_metadata || '{}']
+  app = metadata['app'].to_s.split('/').first
+  
+  @only_apps.include? app
+end
+
 def already_voted_for?(author)
   return false if @voting_rules.unique_author.nil?
   
@@ -251,6 +269,8 @@ def may_vote?(comment)
   return false if skip_tags_intersection? comment.json_metadata
   return false unless only_tags_intersection? comment.json_metadata
   return false if @skip_accounts.include? comment.author
+  return false if skip_app? comment.json_metadata
+  return false unless only_app? comment.json_metadata
   
   true
 end
