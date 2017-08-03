@@ -262,7 +262,14 @@ def may_vote?(comment)
   return false if skip_app? comment.json_metadata
   return false unless only_app? comment.json_metadata
   
-  true
+  # We are checking if any voter can vote at all.  If at least one voter has a
+  # non-zero vote_weight, return true.  Otherwise, don't bother to even queue up
+  # a thread.
+  if @voters.keys.map { |voter| vote_weight(comment.author, voter) > 0.0 }.include? true
+    true
+  else
+    false
+  end
 end
 
 def min_trending_rep(limit)
