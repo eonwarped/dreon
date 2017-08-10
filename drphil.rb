@@ -622,15 +622,19 @@ end
 
 puts "Current mode: #{@voting_rules.mode}.  Accounts voting: #{@voters.size}"
 replay = 0
+stream = true
   
 ARGV.each do |arg|
   if arg =~ /replay:[0-9]+/
     replay = arg.split('replay:').last.to_i rescue 0
   end
+  stream = false if arg == 'stream:false'
 end
 
+replay_threads = []
+
 if replay > 0
-  Thread.new do
+  replay_threads << Thread.new do
     @api = Radiator::Api.new(@options.dup)
     @follow_api = Radiator::FollowApi.new(@options.dup)
     @stream = Radiator::Stream.new(@options.dup)
@@ -658,6 +662,12 @@ if replay > 0
     sleep 3
     puts "Done replaying."
   end
+end
+
+unless stream
+  replay_threads.map(&:join)
+  @threads.values.map(&:join)
+  exit
 end
 
 puts "Now waiting for new posts."

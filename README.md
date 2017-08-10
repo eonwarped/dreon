@@ -4,13 +4,7 @@
 
 #### New Features
 
-* Added `unique_author` (optional) which takes an integer in minutes.  This will limit voting to 1 vote per period.  E.g.: Set it to 1440 to only vote for each author once a day.
-* Added `max_votes_per_post` (optional) which only votes *n* times per post (`winfrey` mode only).
-* Added `only_tags` (optional) which only votes on posts that include these tags.
-* Alternative voting weights all inherit from `vote_weight` if not present.
-* Favorites (`favorite_accounts`) can now have individual vote percent.
-  * Formatted as: account:weight (e.g.: `inertia:100.00`)
-* Now checking if any voter can vote at all.  If at least one voter has a non-zero vote_weight, return true.  Otherwise, don't bother to even queue up a new thread, thus saving memory.
+* Argument called `stream:false` will exit without streaming the blockchain.  Useful in situations where you only want to `replay:` and exit.
 
 #### Features
 
@@ -57,6 +51,13 @@
 * Now streaming on Last Irreversible Block Number, just to be fancy.
 * Now checking for new HF18 `cashout_time` value (if present).
   * This will skip voting when authors edit their old archived posts.
+  * Added `unique_author` (optional) which takes an integer in minutes.  This will limit voting to 1 vote per period.  E.g.: Set it to 1440 to only vote for each author once a day.
+  * Added `max_votes_per_post` (optional) which only votes *n* times per post (`winfrey` mode only).
+  * Added `only_tags` (optional) which only votes on posts that include these tags.
+  * Alternative voting weights all inherit from `vote_weight` if not present.
+  * Favorites (`favorite_accounts`) can now have individual vote percent.
+    * Formatted as: account:weight (e.g.: `inertia:100.00`)
+  * Now checking if any voter can vote at all.  If at least one voter has a non-zero vote_weight, return true.  Otherwise, don't bother to even queue up a new thread, thus saving memory.
 
 #### Overview
 
