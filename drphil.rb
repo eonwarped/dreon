@@ -245,7 +245,9 @@ def already_voted_for?(author)
   return false if @voting_rules.unique_author.nil?
   
   @voted_for_authors.each do |author, vote_at|
-    Time.now.utc - vote_at < @voting_rules.unique_author or @voted_for_authors[author] = nil
+    if Time.now.utc - vote_at > @voting_rules.unique_author
+      @voted_for_authors[author] = nil
+    end
   end
   
   return true if @voted_for_authors.keys.include? author
