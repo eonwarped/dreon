@@ -246,16 +246,47 @@ def only_app?(json_metadata)
   @only_apps.include? app
 end
 
-def already_voted_for?(author)
-  return false if @voting_rules.unique_author.nil?
+def voted_for_authors
+  limit = if @voted_for_authors.empty?
+    10000
+  else
+    300
+  end
   
-  @voted_for_authors.each do |author, vote_at|
-    if Time.now.utc - vote_at > @voting_rules.unique_author
-      @voted_for_authors[author] = nil
+  @semaphore.synchronize do
+    @voters.keys.each do |voter|
+      response = @api.get_account_history(voter, -limit, limit)
+      result = response.result
+      result.reverse.each do |i, tx|
+        op = tx['op']
+        next unless op[0] == 'vote'
+        
+        timestamp = Time.parse(tx['timestamp'] + 'Z')
+        latest = @voted_for_authors[op[1]['author']]
+        
+        if latest.nil? || latest < timestamp
+          @voted_for_authors[op[1]['author']] = timestamp
+        end
+      end
     end
   end
   
-  return true if @voted_for_authors.keys.include? author
+  @voted_for_authors
+end
+
+def already_voted_for?(author, unique_author = @voting_rules.unique_author)
+  return false if unique_author.nil?
+  
+  now = Time.now.utc
+  voted_in_threshold = []
+  
+  voted_for_authors.each do |author, vote_at|
+    if now - vote_at < unique_author * 60
+      voted_in_threshold << author
+    end
+  end
+  
+  return true if voted_in_threshold.include? author
   
   false
 end
@@ -599,7 +630,6 @@ def vote(comment, wait_offset = 0)
         end
         
         puts "\tSuccess: #{response.result.to_json}"
-        @voted_for_authors[author] = Time.now.utc
         votes_cast += 1
         
         if winfrey?
