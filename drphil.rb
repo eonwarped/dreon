@@ -579,10 +579,10 @@ def vote(comment, wait_offset = 0)
             puts "\tFailed: upvote lockout (last twelve hours before payout)"
             break
           elsif message.to_s =~ /tapos_block_summary/
-            warning "Retrying: tapos_block_summary (?)"
+            puts "Retrying: tapos_block_summary (?)"
             redo
           elsif message.to_s =~ /now < trx.expiration/
-            warning "Retrying: now < trx.expiration (?)"
+            puts "Retrying: now < trx.expiration (?)"
             redo
           elsif message.to_s =~ /signature is not canonical/
             puts "\tRetrying: signature was not canonical (bug in Radiator?)"
