@@ -213,7 +213,7 @@ def voters_recharging
 end
 
 def skip_tags_intersection?(json_metadata)
-  metadata = JSON[json_metadata || '{}']
+  metadata = JSON[json_metadata || '{}'] rescue {}
   tags = metadata['tags'] || [] rescue []
   tags = [tags].flatten
   
@@ -223,7 +223,7 @@ end
 def only_tags_intersection?(json_metadata)
   return true if @only_tags.none? # not set, assume all tags intersect
   
-  metadata = JSON[json_metadata || '{}']
+  metadata = JSON[json_metadata || '{}'] rescue {}
   tags = metadata['tags'] || [] rescue []
   tags = [tags].flatten
   
@@ -231,7 +231,7 @@ def only_tags_intersection?(json_metadata)
 end
 
 def skip_app?(json_metadata)
-  metadata = JSON[json_metadata || '{}']
+  metadata = JSON[json_metadata || '{}'] rescue {}
   app = metadata['app'].to_s.split('/').first
   
   @skip_apps.include? app
@@ -240,7 +240,7 @@ end
 def only_app?(json_metadata)
   return true if @only_apps.none?
   
-  metadata = JSON[json_metadata || '{}']
+  metadata = JSON[json_metadata || '{}'] rescue {}
   app = metadata['app'].to_s.split('/').first
   
   @only_apps.include? app
