@@ -4,7 +4,11 @@
 
 #### New Features
 
-* Argument called `stream:false` will exit without streaming the blockchain.  Useful in situations where you only want to `replay:` and exit.
+* Bug/console output fixes.
+* Improved `unique_author` logic to use `account_history` instead of internal timer for improved accuracy between runs.
+* Gem update.
+* Additional error handling.
+* Handling bad json_metadata.
 
 #### Features
 
@@ -58,6 +62,7 @@
   * Favorites (`favorite_accounts`) can now have individual vote percent.
     * Formatted as: account:weight (e.g.: `inertia:100.00`)
   * Now checking if any voter can vote at all.  If at least one voter has a non-zero vote_weight, return true.  Otherwise, don't bother to even queue up a new thread, thus saving memory.
+  * Argument called `stream:false` will exit without streaming the blockchain.  Useful in situations where you only want to `replay:` and exit.
 
 #### Overview
 
@@ -168,7 +173,7 @@ https://ripplerm.github.io/steem-servers/
   <img src="http://i.imgur.com/qUZYLiQ.png" />
 </center>
 
-See my previous Ruby How To posts in: [#radiator](https://steemit.com/created/radiator) [#ruby](https://steemit.com/created/ruby)
+See my previous Ruby How To posts in: [/f/ruby](https://chainbb.com/f/ruby)
 
 ## Get in touch!
 
