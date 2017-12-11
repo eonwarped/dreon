@@ -30,6 +30,6 @@ skip_tags: nsfw test
 flag_signals: cheetah steemcleaners
 vote_signals: 
 
-chain_options:
-  chain: steem
-  url: https://steemd.steemit.com
+:chain_options:
+  :chain: steem
+  :url: https://api.steemit.com
