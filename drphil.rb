@@ -7,7 +7,6 @@
 require 'rubygems'
 require 'bundler/setup'
 require 'yaml'
-require 'pry'
 
 Bundler.require
 
