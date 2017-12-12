@@ -28,6 +28,6 @@ skip_tags: nsfw test ru--mat bm-open
 flag_signals: cheetah kulturagolosa
 vote_signals: 
 
-chain_options:
-  chain: golos
-  url: https://ws.golos.io
+:chain_options:
+  :chain: golos
+  :url: https://ws.golos.io
