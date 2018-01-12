@@ -26,7 +26,9 @@ unless File.exist? @config_path
 end
 
 def parse_voters(voters)
+  hash = {}
   hash[ENV['STEEM_USER']] = ENV['STEEM_POSTING_PRIVATE_KEY']
+  hash
 end
 
 def parse_list(list)
