@@ -26,33 +26,7 @@ unless File.exist? @config_path
 end
 
 def parse_voters(voters)
-  case voters
-  when String
-    raise "Not found: #{voters}" unless File.exist? voters
-
-    f = File.open(voters)
-    hash = {}
-    f.read.each_line do |pair|
-      key, value = pair.split(' ')
-      hash[key] = value if !!key && !!hash
-    end
-
-    hash
-  when Array
-    a = voters.map{ |v| v.split(' ')}.flatten.each_slice(2)
-
-    return a.to_h if a.respond_to? :to_h
-
-    hash = {}
-
-    voters.each_with_index do |e|
-      key, val = e.split(' ')
-      hash[key] = val
-    end
-
-    hash
-  else; raise "Unsupported voters: #{voters}"
-  end
+  hash[ENV['STEEM_USER']] = ENV['STEEM_POSTING_PRIVATE_KEY']
 end
 
 def parse_list(list)
